@@ -18,8 +18,7 @@
       margin-top: 14px;
       font-weight: bold;
     }
-    select,
-    input {
+    select, input, button {
       width: 100%;
       margin-top: 6px;
       padding: 10px;
@@ -27,20 +26,17 @@
       box-sizing: border-box;
     }
     button {
-      width: 100%;
-      margin-top: 20px;
-      padding: 12px;
-      font-size: 16px;
-      border: none;
       background: #fff;
       color: #000;
+      border: none;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
   <h2>Watchface Settings</h2>
 
-  <label for="tl_metric">Top Left</label>
+  <label>Top Left</label>
   <select id="tl_metric">
     <option value="0">Battery</option>
     <option value="1">Day</option>
@@ -49,7 +45,7 @@
     <option value="4">Off</option>
   </select>
 
-  <label for="tr_metric">Top Right</label>
+  <label>Top Right</label>
   <select id="tr_metric">
     <option value="0">Battery</option>
     <option value="1">Day</option>
@@ -58,7 +54,7 @@
     <option value="4">Off</option>
   </select>
 
-  <label for="bl_metric">Bottom Left</label>
+  <label>Bottom Left</label>
   <select id="bl_metric">
     <option value="0">Battery</option>
     <option value="1">Day</option>
@@ -67,7 +63,7 @@
     <option value="4">Off</option>
   </select>
 
-  <label for="br_metric">Bottom Right</label>
+  <label>Bottom Right</label>
   <select id="br_metric">
     <option value="0">Battery</option>
     <option value="1">Day</option>
@@ -76,22 +72,22 @@
     <option value="4">Off</option>
   </select>
 
-  <label for="tl_color">Top Left Color</label>
+  <label>Top Left Color</label>
   <input id="tl_color" type="color" value="#ff0000">
 
-  <label for="tr_color">Top Right Color</label>
+  <label>Top Right Color</label>
   <input id="tr_color" type="color" value="#0000ff">
 
-  <label for="bl_color">Bottom Left Color</label>
+  <label>Bottom Left Color</label>
   <input id="bl_color" type="color" value="#ffcc00">
 
-  <label for="br_color">Bottom Right Color</label>
+  <label>Bottom Right Color</label>
   <input id="br_color" type="color" value="#00ff00">
 
-  <button onclick="save()">Save Settings</button>
+  <button id="save">Save Settings</button>
 
   <script>
-    function save() {
+    document.getElementById('save').addEventListener('click', function() {
       var data = {
         tl_metric: parseInt(document.getElementById('tl_metric').value, 10),
         tr_metric: parseInt(document.getElementById('tr_metric').value, 10),
@@ -103,8 +99,8 @@
         br_color: parseInt(document.getElementById('br_color').value.substring(1), 16)
       };
 
-      document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(data));
-    }
+      window.location.href = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(data));
+    });
   </script>
 </body>
 </html>
