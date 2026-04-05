@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html>
 <body style="background:black;color:white;font-family:sans-serif;padding:20px;">
-  <a href="pebblejs://close#test" style="color:white;font-size:24px;">Close Test</a>
+  <button onclick="saveSettings()">Save Settings</button>
 </body>
+  <script>
+  function saveSettings() {
+    var data = {
+      tl_metric: parseInt(document.getElementById('tl_metric').value, 10),
+      tr_metric: parseInt(document.getElementById('tr_metric').value, 10),
+      bl_metric: parseInt(document.getElementById('bl_metric').value, 10),
+      br_metric: parseInt(document.getElementById('br_metric').value, 10),
+      tl_color: parseInt(document.getElementById('tl_color').value.substring(1), 16),
+      tr_color: parseInt(document.getElementById('tr_color').value.substring(1), 16),
+      bl_color: parseInt(document.getElementById('bl_color').value.substring(1), 16),
+      br_color: parseInt(document.getElementById('br_color').value.substring(1), 16)
+    };
+
+    var params = new URLSearchParams(window.location.search);
+    var returnTo = params.get('return_to');
+
+    if (returnTo) {
+      window.location.href = returnTo + encodeURIComponent(JSON.stringify(data));
+    }
+  }
+</script>
 </html>
