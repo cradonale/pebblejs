@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Config Watchface Settings</title>
+  <title>Watchface Settings</title>
   <style>
     body { background:#111; color:#fff; font-family:sans-serif; padding:18px; }
     label { display:block; margin-top:14px; font-weight:bold; }
@@ -65,26 +65,38 @@
 
   <script>
     function getQueryParam(name) {
-      var params = new URLSearchParams(window.location.search);
-      return params.get(name);
+      var query = window.location.search.substring(1).split('&');
+      for (var i = 0; i < query.length; i++) {
+        var pair = query[i].split('=');
+        if (decodeURIComponent(pair[0]) === name) {
+          return decodeURIComponent(pair[1] || '');
+        }
+      }
+      return null;
     }
 
-    function hexColor(n) {
-      var hex = Number(n).toString(16);
-      while (hex.length < 6) hex = '0' + hex;
+    function toHexColor(value, fallback) {
+      var n = parseInt(value, 10);
+      if (isNaN(n)) {
+        n = fallback;
+      }
+      var hex = n.toString(16);
+      while (hex.length < 6) {
+        hex = '0' + hex;
+      }
       return '#' + hex;
     }
 
-    function loadInitialValues() {
+    function setInitialValues() {
       document.getElementById('tl_metric').value = getQueryParam('tl_metric') || '0';
       document.getElementById('tr_metric').value = getQueryParam('tr_metric') || '1';
       document.getElementById('bl_metric').value = getQueryParam('bl_metric') || '2';
       document.getElementById('br_metric').value = getQueryParam('br_metric') || '3';
 
-      document.getElementById('tl_color').value = hexColor(getQueryParam('tl_color') || 0xFF0000);
-      document.getElementById('tr_color').value = hexColor(getQueryParam('tr_color') || 0x0000FF);
-      document.getElementById('bl_color').value = hexColor(getQueryParam('bl_color') || 0xFFCC00);
-      document.getElementById('br_color').value = hexColor(getQueryParam('br_color') || 0x00FF00);
+      document.getElementById('tl_color').value = toHexColor(getQueryParam('tl_color'), 0xFF0000);
+      document.getElementById('tr_color').value = toHexColor(getQueryParam('tr_color'), 0x0000FF);
+      document.getElementById('bl_color').value = toHexColor(getQueryParam('bl_color'), 0xFFCC00);
+      document.getElementById('br_color').value = toHexColor(getQueryParam('br_color'), 0x00FF00);
     }
 
     function saveSettings() {
@@ -105,7 +117,7 @@
       }
     }
 
-    loadInitialValues();
+    setInitialValues();
   </script>
 </body>
 </html>
