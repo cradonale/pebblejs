@@ -2,35 +2,12 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Watchface Config</title>
+  <title>Watchface Settings</title>
   <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: sans-serif;
-      padding: 18px;
-    }
-    h2 {
-      margin-top: 0;
-    }
-    label {
-      display: block;
-      margin-top: 14px;
-      font-weight: bold;
-    }
-    select, input, button {
-      width: 100%;
-      margin-top: 6px;
-      padding: 10px;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
-    button {
-      background: #fff;
-      color: #000;
-      border: none;
-      margin-top: 20px;
-    }
+    body { background:#111; color:#fff; font-family:sans-serif; padding:18px; }
+    label { display:block; margin-top:14px; font-weight:bold; }
+    select, input, button { width:100%; margin-top:6px; padding:10px; font-size:16px; box-sizing:border-box; }
+    button { background:#fff; color:#000; border:none; margin-top:20px; }
   </style>
 </head>
 <body>
@@ -73,31 +50,41 @@
   </select>
 
   <label>Top Left Color</label>
-  <input id="tl_color" type="color" value="#ff0000">
+  <input id="tl_color" type="color">
 
   <label>Top Right Color</label>
-  <input id="tr_color" type="color" value="#0000ff">
+  <input id="tr_color" type="color">
 
   <label>Bottom Left Color</label>
-  <input id="bl_color" type="color" value="#ffcc00">
+  <input id="bl_color" type="color">
 
   <label>Bottom Right Color</label>
-  <input id="br_color" type="color" value="#00ff00">
+  <input id="br_color" type="color">
 
   <button onclick="saveSettings()">Save Settings</button>
 
   <script>
     function getQueryParam(name) {
-      var query = window.location.search.substring(1);
-      var vars = query.split('&');
+      var params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
 
-      for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split('=');
-        if (decodeURIComponent(pair[0]) === name) {
-          return decodeURIComponent(pair[1]);
-        }
-      }
-      return null;
+    function hexColor(n) {
+      var hex = Number(n).toString(16);
+      while (hex.length < 6) hex = '0' + hex;
+      return '#' + hex;
+    }
+
+    function loadInitialValues() {
+      document.getElementById('tl_metric').value = getQueryParam('tl_metric') || '0';
+      document.getElementById('tr_metric').value = getQueryParam('tr_metric') || '1';
+      document.getElementById('bl_metric').value = getQueryParam('bl_metric') || '2';
+      document.getElementById('br_metric').value = getQueryParam('br_metric') || '3';
+
+      document.getElementById('tl_color').value = hexColor(getQueryParam('tl_color') || 0xFF0000);
+      document.getElementById('tr_color').value = hexColor(getQueryParam('tr_color') || 0x0000FF);
+      document.getElementById('bl_color').value = hexColor(getQueryParam('bl_color') || 0xFFCC00);
+      document.getElementById('br_color').value = hexColor(getQueryParam('br_color') || 0x00FF00);
     }
 
     function saveSettings() {
@@ -113,11 +100,12 @@
       };
 
       var returnTo = getQueryParam('return_to');
-
       if (returnTo) {
         document.location = returnTo + encodeURIComponent(JSON.stringify(configData));
       }
     }
+
+    loadInitialValues();
   </script>
 </body>
 </html>
