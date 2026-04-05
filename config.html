@@ -84,10 +84,10 @@
   <label>Bottom Right Color</label>
   <input id="br_color" type="color" value="#00ff00">
 
-  <button id="save">Save Settings</button>
+  <button onclick="saveSettings()">Save Settings</button>
 
   <script>
-    document.getElementById('save').addEventListener('click', function() {
+    function saveSettings() {
       var data = {
         tl_metric: parseInt(document.getElementById('tl_metric').value, 10),
         tr_metric: parseInt(document.getElementById('tr_metric').value, 10),
@@ -99,8 +99,8 @@
         br_color: parseInt(document.getElementById('br_color').value.substring(1), 16)
       };
 
-      window.location.href = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(data));
-    });
+      document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(data));
+    }
   </script>
 </body>
 </html>
