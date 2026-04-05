@@ -104,6 +104,8 @@
       document.getElementById('tr_color').value = toHexColor(getQueryParam('tr_color'), 0x0000FF);
       document.getElementById('bl_color').value = toHexColor(getQueryParam('bl_color'), 0xFFCC00);
       document.getElementById('br_color').value = toHexColor(getQueryParam('br_color'), 0x00FF00);
+      document.getElementById('use_24h').value = getQueryParam('use_24h') || '1';
+
     }
 
     function saveSettings() {
@@ -115,13 +117,16 @@
         tl_color: parseInt(document.getElementById('tl_color').value.substring(1), 16),
         tr_color: parseInt(document.getElementById('tr_color').value.substring(1), 16),
         bl_color: parseInt(document.getElementById('bl_color').value.substring(1), 16),
-        br_color: parseInt(document.getElementById('br_color').value.substring(1), 16)
+        br_color: parseInt(document.getElementById('br_color').value.substring(1), 16)  
+        use_24h: parseInt(document.getElementById('use_24h').value, 10)
+
       };
 
       var returnTo = getQueryParam('return_to');
       if (returnTo) {
         document.location = returnTo + encodeURIComponent(JSON.stringify(configData));
       }
+      
     }
 
     setInitialValues();
