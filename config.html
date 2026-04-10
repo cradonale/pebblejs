@@ -4,10 +4,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Watchface Settings</title>
   <style>
-    body { background:#111; color:#fff; font-family:sans-serif; padding:18px; }
-    label { display:block; margin-top:14px; font-weight:bold; }
-    select, input, button { width:100%; margin-top:6px; padding:10px; font-size:16px; box-sizing:border-box; }
-    button { background:#fff; color:#000; border:none; margin-top:20px; }
+    body {
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+      padding: 18px;
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      font-weight: bold;
+    }
+
+    select, input, button {
+      width: 100%;
+      margin-top: 6px;
+      padding: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #fff;
+      color: #000;
+      border: none;
+      margin-top: 20px;
+    }
+
+    .hint {
+      margin-top: 8px;
+      color: #aaa;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
@@ -19,7 +48,7 @@
     <option value="0">12 Hour</option>
   </select>
 
-  <label>Top Left</label>
+  <label id="tl_metric_label">Top Left</label>
   <select id="tl_metric">
     <option value="0">Battery</option>
     <option value="1">Day</option>
@@ -28,7 +57,7 @@
     <option value="4">Off</option>
   </select>
 
-  <label>Top Right</label>
+  <label id="tr_metric_label">Top Right</label>
   <select id="tr_metric">
     <option value="0">Battery</option>
     <option value="1">Day</option>
@@ -37,7 +66,7 @@
     <option value="4">Off</option>
   </select>
 
-  <label>Bottom Left</label>
+  <label id="bl_metric_label">Bottom Left</label>
   <select id="bl_metric">
     <option value="0">Battery</option>
     <option value="1">Day</option>
@@ -46,7 +75,7 @@
     <option value="4">Off</option>
   </select>
 
-  <label>Bottom Right</label>
+  <label id="br_metric_label">Bottom Right</label>
   <select id="br_metric">
     <option value="0">Battery</option>
     <option value="1">Day</option>
@@ -55,17 +84,19 @@
     <option value="4">Off</option>
   </select>
 
-  <label>Top Left Color</label>
+  <label id="tl_color_label">Top Left Color</label>
   <input id="tl_color" type="color">
 
-  <label>Top Right Color</label>
+  <label id="tr_color_label">Top Right Color</label>
   <input id="tr_color" type="color">
 
-  <label>Bottom Left Color</label>
+  <label id="bl_color_label">Bottom Left Color</label>
   <input id="bl_color" type="color">
 
-  <label>Bottom Right Color</label>
+  <label id="br_color_label">Bottom Right Color</label>
   <input id="br_color" type="color">
+
+  <div class="hint" id="layout_hint"></div>
 
   <button onclick="saveSettings()">Save Settings</button>
 
@@ -91,6 +122,45 @@
         hex = '0' + hex;
       }
       return '#' + hex;
+    }
+
+    function isGabbroLayout() {
+      var platform = (getQueryParam('platform') || '').toLowerCase();
+      var shape = (getQueryParam('shape') || '').toLowerCase();
+      var layout = (getQueryParam('layout') || '').toLowerCase();
+
+      return platform === 'gabbro' || shape === 'round' || layout === 'round';
+    }
+
+    function applyLayoutLabels() {
+      var round = isGabbroLayout();
+
+      if (round) {
+        document.getElementById('tl_metric_label').textContent = 'Top';
+        document.getElementById('tr_metric_label').textContent = 'Right';
+        document.getElementById('bl_metric_label').textContent = 'Left';
+        document.getElementById('br_metric_label').textContent = 'Bottom';
+
+        document.getElementById('tl_color_label').textContent = 'Top Color';
+        document.getElementById('tr_color_label').textContent = 'Right Color';
+        document.getElementById('bl_color_label').textContent = 'Left Color';
+        document.getElementById('br_color_label').textContent = 'Bottom Color';
+
+        document.getElementById('layout_hint').textContent =
+          'Round watch layout: Top, Right, Left, Bottom';
+      } else {
+        document.getElementById('tl_metric_label').textContent = 'Top Left';
+        document.getElementById('tr_metric_label').textContent = 'Top Right';
+        document.getElementById('bl_metric_label').textContent = 'Bottom Left';
+        document.getElementById('br_metric_label').textContent = 'Bottom Right';
+
+        document.getElementById('tl_color_label').textContent = 'Top Left Color';
+        document.getElementById('tr_color_label').textContent = 'Top Right Color';
+        document.getElementById('bl_color_label').textContent = 'Bottom Left Color';
+        document.getElementById('br_color_label').textContent = 'Bottom Right Color';
+
+        document.getElementById('layout_hint').textContent = '';
+      }
     }
 
     function setInitialValues() {
@@ -126,6 +196,7 @@
       }
     }
 
+    applyLayoutLabels();
     setInitialValues();
   </script>
 </body>
