@@ -54,11 +54,11 @@
 
   <label id="tl_metric_label">Top Left</label>
   <select id="tl_metric">
+    <option value="4">Off</option>
     <option value="0">Battery</option>
     <option value="1">Day</option>
     <option value="2">Bluetooth</option>
     <option value="3">Steps</option>
-    <option value="4">Off</option>
     <option value="5">Calendar Week</option>
     <option value="6">Calendar Day</option>
     <option value="7">Distance</option>
@@ -68,11 +68,11 @@
 
   <label id="tr_metric_label">Top Right</label>
   <select id="tr_metric">
+    <option value="4">Off</option>
     <option value="0">Battery</option>
     <option value="1">Day</option>
     <option value="2">Bluetooth</option>
     <option value="3">Steps</option>
-    <option value="4">Off</option>
     <option value="5">Calendar Week</option>
     <option value="6">Calendar Day</option>
     <option value="7">Distance</option>
@@ -82,11 +82,11 @@
 
   <label id="bl_metric_label">Bottom Left</label>
   <select id="bl_metric">
+    <option value="4">Off</option>
     <option value="0">Battery</option>
     <option value="1">Day</option>
     <option value="2">Bluetooth</option>
     <option value="3">Steps</option>
-    <option value="4">Off</option>
     <option value="5">Calendar Week</option>
     <option value="6">Calendar Day</option>
     <option value="7">Distance</option>
@@ -96,17 +96,26 @@
 
   <label id="br_metric_label">Bottom Right</label>
   <select id="br_metric">
+    <option value="4">Off</option>
     <option value="0">Battery</option>
     <option value="1">Day</option>
     <option value="2">Bluetooth</option>
     <option value="3">Steps</option>
-    <option value="4">Off</option>
     <option value="5">Calendar Week</option>
     <option value="6">Calendar Day</option>
     <option value="7">Distance</option>
     <option value="8">Active Time</option>
     <option value="9" class="hr-option">Heart Rate</option>
   </select>
+
+  <label>Steps Goal</label>
+  <input id="steps_goal" type="number" min="1000" step="500">
+
+  <label>Distance Goal (meters)</label>
+  <input id="distance_goal" type="number" min="100" step="100">
+
+  <label>Active Time Goal (seconds)</label>
+  <input id="active_time_goal" type="number" min="60" step="60">
 
   <label id="tl_color_label">Top Left Color</label>
   <input id="tl_color" type="color" value="#ff0000">
@@ -180,6 +189,10 @@
       document.getElementById('bl_metric').value = getQueryParam('bl_metric') || '2';
       document.getElementById('br_metric').value = getQueryParam('br_metric') || '3';
 
+      document.getElementById('steps_goal').value = getQueryParam('steps_goal') || '8000';
+      document.getElementById('distance_goal').value = getQueryParam('distance_goal') || '5000';
+      document.getElementById('active_time_goal').value = getQueryParam('active_time_goal') || '1800';
+
       document.getElementById('tl_color').value = toHexColor(getQueryParam('tl_color'), 0xFF0000);
       document.getElementById('tr_color').value = toHexColor(getQueryParam('tr_color'), 0x0000FF);
       document.getElementById('bl_color').value = toHexColor(getQueryParam('bl_color'), 0xFFCC00);
@@ -214,7 +227,10 @@
         tr_color: parseInt(document.getElementById('tr_color').value.substring(1), 16),
         bl_color: parseInt(document.getElementById('bl_color').value.substring(1), 16),
         br_color: parseInt(document.getElementById('br_color').value.substring(1), 16),
-        use_24h: parseInt(document.getElementById('use_24h').value, 10)
+        use_24h: parseInt(document.getElementById('use_24h').value, 10),
+        steps_goal: parseInt(document.getElementById('steps_goal').value, 10),
+        distance_goal: parseInt(document.getElementById('distance_goal').value, 10),
+        active_time_goal: parseInt(document.getElementById('active_time_goal').value, 10)
       };
 
       var returnTo = getQueryParam('return_to');
