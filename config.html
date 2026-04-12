@@ -10,14 +10,17 @@
       font-family: sans-serif;
       padding: 18px;
     }
+
     h2 {
       margin-top: 0;
     }
+
     label {
       display: block;
       margin-top: 14px;
       font-weight: bold;
     }
+
     select, input, button {
       width: 100%;
       margin-top: 6px;
@@ -25,12 +28,14 @@
       font-size: 16px;
       box-sizing: border-box;
     }
+
     button {
       background: #fff;
       color: #000;
       border: none;
       margin-top: 20px;
     }
+
     .hint {
       margin-top: 10px;
       color: #aaa;
@@ -87,7 +92,6 @@
     <option value="7">Distance</option>
     <option value="8">Active Time</option>
     <option value="9" class="hr-option">Heart Rate</option>
-
   </select>
 
   <label id="br_metric_label">Bottom Right</label>
@@ -102,7 +106,6 @@
     <option value="7">Distance</option>
     <option value="8">Active Time</option>
     <option value="9" class="hr-option">Heart Rate</option>
-
   </select>
 
   <label id="tl_color_label">Top Left Color</label>
@@ -183,6 +186,24 @@
       document.getElementById('br_color').value = toHexColor(getQueryParam('br_color'), 0x00FF00);
     }
 
+    function disableHeartRateForGabbro() {
+      if (!isGabbroLayout()) {
+        return;
+      }
+
+      var hrOptions = document.querySelectorAll('.hr-option');
+      for (var i = 0; i < hrOptions.length; i++) {
+        hrOptions[i].style.display = 'none';
+      }
+
+      ['tl_metric', 'tr_metric', 'bl_metric', 'br_metric'].forEach(function(id) {
+        var select = document.getElementById(id);
+        if (select.value === '9') {
+          select.value = '4';
+        }
+      });
+    }
+
     function saveSettings() {
       var configData = {
         tl_metric: parseInt(document.getElementById('tl_metric').value, 10),
@@ -207,6 +228,7 @@
 
     applyLayoutLabels();
     setInitialValues();
+    disableHeartRateForGabbro();
   </script>
 </body>
 </html>
