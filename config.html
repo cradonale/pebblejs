@@ -117,6 +117,12 @@
   <label>Active Time Goal (seconds)</label>
   <input id="active_time_goal" type="number" min="60" step="60">
 
+  <label>Seconds Ring</label>
+  <select id="seconds_ring_mode">
+    <option value="0">Show 5s On Wake</option>
+    <option value="1">Always Show</option>
+  </select>
+
   <label id="tl_color_label">Top Left Color</label>
   <input id="tl_color" type="color" value="#ff0000">
 
@@ -192,6 +198,7 @@
       document.getElementById('steps_goal').value = getQueryParam('steps_goal') || '8000';
       document.getElementById('distance_goal').value = getQueryParam('distance_goal') || '5000';
       document.getElementById('active_time_goal').value = getQueryParam('active_time_goal') || '1800';
+      document.getElementById('seconds_ring_mode').value = getQueryParam('seconds_ring_mode') || '0';
 
       document.getElementById('tl_color').value = toHexColor(getQueryParam('tl_color'), 0xFF0000);
       document.getElementById('tr_color').value = toHexColor(getQueryParam('tr_color'), 0x0000FF);
@@ -230,7 +237,8 @@
         use_24h: parseInt(document.getElementById('use_24h').value, 10),
         steps_goal: parseInt(document.getElementById('steps_goal').value, 10),
         distance_goal: parseInt(document.getElementById('distance_goal').value, 10),
-        active_time_goal: parseInt(document.getElementById('active_time_goal').value, 10)
+        active_time_goal: parseInt(document.getElementById('active_time_goal').value, 10),
+        seconds_ring_mode: parseInt(document.getElementById('seconds_ring_mode').value, 10)
       };
 
       var returnTo = getQueryParam('return_to');
