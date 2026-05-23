@@ -260,17 +260,50 @@ function loadUserSchemes() {
 function publishScheme() {
   var name = document.getElementById("schemeName").value.trim();
   if (!name) { alert("Enter a name for your scheme"); return; }
+  if (!JSONBIN_BIN || JSONBIN_BIN === "YOUR_MASTER_BIN_ID") {
+    document.getElementById("publishStatus").textContent = "Sharing not configured yet";
+    return;
+  }
+  var writeKey = getQueryParam("wk") || "";
+  if (!writeKey) {
+    document.getElementById("publishStatus").textContent = "Write access not available — open settings from Pebble app";
+    return;
+  }
   var bg=document.getElementById("cBg").value;
   var ink=document.getElementById("cInk").value;
   var accent=document.getElementById("cAccent").value;
-  // Send scheme to index.js for publishing — key stays on phone
-  // We close with a special action flag so index.js knows to publish, not save
-  var result = {
-    action: "publish_scheme",
-    scheme: {name:name, bg:bg, ink:ink, accent:accent, id:Date.now().toString(36)}
-  };
-  document.getElementById("publishStatus").textContent = "Sending to phone to publish...";
-  document.location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(result));
+  var status = document.getElementById("publishStatus");
+  status.textContent = "Sharing...";
+
+  // Read current schemes first
+  fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN + "/latest")
+  .then(function(r){return r.json();})
+  .then(function(data) {
+    var schemes = (data.record && data.record.schemes) || [];
+    var exists = schemes.find(function(s){return s.name.toLowerCase()===name.toLowerCase();});
+    if (exists) {
+      status.textContent = "A scheme named '"+name+"' already exists!";
+      return Promise.reject("duplicate");
+    }
+    var newScheme = {name:name, bg:bg, ink:ink, accent:accent, id:Date.now().toString(36)};
+    schemes.push(newScheme);
+    return fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN, {
+      method: "PUT",
+      headers: {"Content-Type":"application/json", "X-Master-Key": writeKey},
+      body: JSON.stringify({schemes:schemes})
+    });
+  })
+  .then(function(r){ if(r) return r.json(); })
+  .then(function(d) {
+    if (d) {
+      status.textContent = "✓ '"+name+"' shared with everyone!";
+      document.getElementById("schemeName").value = "";
+      loadUserSchemes();
+    }
+  })
+  .catch(function(e){
+    if (e !== "duplicate") status.textContent = "Failed to share — try again";
+  });
 }
 
 function loadSchemeById() {
@@ -376,9 +409,15 @@ function updatePreview() {
   });
   if(state.tz){
     var now=new Date();
-    var utc=now.getTime()+now.getTimezoneOffset()*60000;
-    var tz2=new Date(utc+Number(state.tz.offset)*3600000);
-    var h=tz2.getHours(),m=tz2.getMinutes();
+    // Get current UTC time in minutes
+    var utcH=now.getUTCHours();
+    var utcM=now.getUTCMinutes();
+    var utcTotal=utcH*60+utcM;
+    // Add tz offset in minutes
+    var offsetMins=Math.round(Number(state.tz.offset)*60);
+    var tzTotal=(utcTotal+offsetMins+1440)%1440;
+    var h=Math.floor(tzTotal/60);
+    var m=tzTotal%60;
     var ampm=h<12?"AM":"PM";
     document.getElementById("wTZ").textContent=state.tz.label+" "+(h%12||12)+":"+("0"+m).slice(-2)+" "+ampm;
   }
