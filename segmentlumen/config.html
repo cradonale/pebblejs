@@ -63,8 +63,12 @@ input:focus{border-color:var(--accent,#76945c)}
 </div>
 
 <div class="card">
-<h2>Theme Presets</h2>
+<h2>Built-in Themes</h2>
 <div class="themes" id="presets"></div>
+<div id="savedPresetsWrap" style="margin-top:10px;display:none">
+<h2 style="margin-top:0">My Saved Schemes</h2>
+<div class="themes" id="savedPresetBtns"></div>
+</div>
 </div>
 
 <div class="card">
@@ -225,37 +229,52 @@ Object.keys(THEMES).forEach(function(name) {
 });
 
 // Saved schemes
+function makeSchemeBtn(s, saved, i, container) {
+  var btn = document.createElement("button");
+  btn.className = "theme-btn";
+  btn.textContent = s.name;
+  btn.style.background = s.bg;
+  btn.style.color = s.ink;
+  btn.style.borderColor = s.accent;
+  btn.title = "Click to apply • Right-click to delete";
+  btn.onclick = function() {
+    applyThemeColors(s.bg, s.ink, s.accent);
+    document.querySelectorAll(".theme-btn").forEach(function(b){b.classList.remove("active");});
+    btn.classList.add("active");
+  };
+  btn.oncontextmenu = function(e) {
+    e.preventDefault();
+    if (confirm("Delete scheme '" + s.name + "'?")) {
+      saved.splice(i, 1);
+      localStorage.setItem("sl_schemes", JSON.stringify(saved));
+      loadSavedSchemes();
+    }
+  };
+  container.appendChild(btn);
+}
+
 function loadSavedSchemes() {
+  var saved = JSON.parse(localStorage.getItem("sl_schemes") || "[]");
+
+  // Schemes in colors card
   var div = document.getElementById("savedSchemes");
   div.innerHTML = "";
-  var saved = JSON.parse(localStorage.getItem("sl_schemes") || "[]");
   if (!saved.length) {
     div.innerHTML = '<span style="font-size:13px;color:var(--site-muted,#888)">No saved schemes yet</span>';
-    return;
+  } else {
+    saved.forEach(function(s, i) { makeSchemeBtn(s, saved, i, div); });
   }
-  saved.forEach(function(s, i) {
-    var btn = document.createElement("button");
-    btn.className = "theme-btn";
-    btn.textContent = s.name;
-    btn.style.background = s.bg;
-    btn.style.color = s.ink;
-    btn.style.borderColor = s.accent;
-    btn.title = "Click to apply, long press to delete";
-    btn.onclick = function() {
-      applyThemeColors(s.bg, s.ink, s.accent);
-      document.querySelectorAll(".theme-btn").forEach(function(b){b.classList.remove("active");});
-      btn.classList.add("active");
-    };
-    btn.oncontextmenu = function(e) {
-      e.preventDefault();
-      if (confirm("Delete scheme '" + s.name + "'?")) {
-        saved.splice(i, 1);
-        localStorage.setItem("sl_schemes", JSON.stringify(saved));
-        loadSavedSchemes();
-      }
-    };
-    div.appendChild(btn);
-  });
+
+  // Schemes in presets section
+  var wrap = document.getElementById("savedPresetsWrap");
+  var presetBtns = document.getElementById("savedPresetBtns");
+  presetBtns.innerHTML = "";
+  if (saved.length) {
+    wrap.style.display = "block";
+    saved.forEach(function(s, i) { makeSchemeBtn(s, saved, i, presetBtns); });
+  } else {
+    wrap.style.display = "none";
+  }
 }
 
 function saveScheme() {
@@ -430,7 +449,12 @@ function saveSettings() {
   if (ua.indexOf("Pebble")>=0||ua.indexOf("PebbleKit")>=0) {
     location.href = "pebblejs://close#" + encodeURIComponent(JSON.stringify(result));
   } else {
-    alert("Settings ready!\n(On Pebble app this will save to watch)");
+    // Desktop preview mode — show confirmation
+    var msg = document.createElement("div");
+    msg.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent,#76945c);color:#fff;padding:12px 24px;border-radius:10px;font-weight:600;font-size:15px;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,.3)";
+    msg.textContent = "✓ Settings saved (open in Pebble app to send to watch)";
+    document.body.appendChild(msg);
+    setTimeout(function(){ document.body.removeChild(msg); }, 3000);
   }
 }
 
