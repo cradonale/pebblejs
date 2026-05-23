@@ -35,11 +35,6 @@ input:focus{border-color:var(--accent,#76945c)}
 #suggestions{position:absolute;top:100%;left:0;right:0;background:var(--site-card,#fff);border:1.5px solid var(--site-border,#ddd);border-top:none;border-radius:0 0 10px 10px;z-index:10;max-height:200px;overflow-y:auto;display:none}
 .suggest-item{padding:10px 12px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--site-border,#f0f0f0);color:var(--site-ink,#222)}
 .suggest-item:hover{background:var(--site-hover,#f5f5f5)}
-#tzSearch{width:100%;padding:10px;border:1.5px solid var(--site-border,#ddd);border-radius:10px;font-size:15px;margin-bottom:8px;outline:none;background:var(--site-card,#fff);color:var(--site-ink,#222)}
-#tzList{max-height:200px;overflow-y:auto;border:1.5px solid var(--site-border,#ddd);border-radius:10px}
-.tz-item{padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--site-border,#f0f0f0);display:flex;justify-content:space-between;color:var(--site-ink,#222)}
-.tz-item:hover,.tz-item.selected{background:var(--site-hover,#e8f5e9)}
-.tz-offset{color:var(--site-muted,#888);font-size:12px}
 .save-btn{display:block;width:100%;padding:15px;background:var(--accent,#76945c);color:#fff;border:none;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer;margin-top:8px}
 .save-btn:active{filter:brightness(.9);transform:scale(.98)}
 .city-selected{margin-top:6px;font-size:13px;color:var(--site-muted,#888)}
@@ -48,7 +43,7 @@ input:focus{border-color:var(--accent,#76945c)}
 </style>
 </head>
 <body>
-<h1>⌚ SEGMENT LUMEN</h1>
+<h1>SEGMENT LUMEN</h1>
 
 <div class="card">
 <h2>Preview</h2>
@@ -102,8 +97,7 @@ input:focus{border-color:var(--accent,#76945c)}
 
 <div class="card">
 <h2>2nd Time Zone</h2>
-<input type="text" id="tzSearch" placeholder="Search timezone or city...">
-<div id="tzList"></div>
+<select id="tzSelect" style="width:100%;padding:10px;border:1.5px solid var(--site-border,#ddd);border-radius:10px;font-size:15px;background:var(--site-card,#fff);color:var(--site-ink,#222);outline:none;cursor:pointer"></select>
 </div>
 
 <button class="save-btn" onclick="saveSettings()">Save to Watch</button>
@@ -323,31 +317,24 @@ function loadSchemeById() {
   });
 }
 
-// ── Timezone list ─────────────────────────────────────────────────────────
-function renderTzList(filter) {
-  var list = document.getElementById("tzList");
-  list.innerHTML = "";
-  var filtered = TIMEZONES.filter(function(tz) {
-    if (!filter) return true;
-    var q=filter.toLowerCase();
-    return tz.city.toLowerCase().indexOf(q)>=0||tz.label.toLowerCase().indexOf(q)>=0;
+// ── Timezone dropdown ─────────────────────────────────────────────────────
+function buildTzDropdown(selectedLabel) {
+  var sel = document.getElementById("tzSelect");
+  sel.innerHTML = "";
+  TIMEZONES.forEach(function(tz) {
+    var opt = document.createElement("option");
+    opt.value = tz.label;
+    var sign = tz.offset >= 0 ? "+" : "";
+    opt.textContent = tz.city + " (" + tz.label + ") UTC" + sign + tz.offset;
+    if (tz.label === (selectedLabel || (state.tz && state.tz.label))) opt.selected = true;
+    sel.appendChild(opt);
   });
-  filtered.forEach(function(tz) {
-    var item = document.createElement("div");
-    item.className = "tz-item"+(state.tz&&state.tz.label===tz.label?" selected":"");
-    var sign=tz.offset>=0?"+":"";
-    item.innerHTML='<span>'+tz.city+' <b>'+tz.label+'</b></span><span class="tz-offset">UTC'+sign+tz.offset+'</span>';
-    item.onclick = function() {
-      state.tz=tz;
-      document.querySelectorAll(".tz-item").forEach(function(i){i.classList.remove("selected");});
-      item.classList.add("selected");
-      updatePreview();
-    };
-    list.appendChild(item);
-  });
+  sel.onchange = function() {
+    var found = TIMEZONES.find(function(t){return t.label===sel.value;});
+    if (found) { state.tz = found; updatePreview(); }
+  };
 }
-renderTzList("");
-document.getElementById("tzSearch").addEventListener("input",function(){renderTzList(this.value);});
+buildTzDropdown();
 
 // ── City search ───────────────────────────────────────────────────────────
 var searchTimer=null;
@@ -452,8 +439,9 @@ function loadSettings() {
   }
   if (tzLabel) {
     var found = TIMEZONES.find(function(t){return t.label===tzLabel;});
-    if (found) { state.tz=found; renderTzList(""); }
+    if (found) { state.tz=found; }
   }
+  buildTzDropdown(state.tz ? state.tz.label : null);
   loadUserSchemes();
   updatePreview();
 }
