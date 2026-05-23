@@ -2,12 +2,12 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Segment Lumen Settings</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--site-bg,#f0f0f0);color:var(--site-ink,#222);max-width:480px;margin:0 auto;padding:12px;transition:background .3s,color .3s}
-h1{font-size:18px;text-align:center;margin:12px 0 16px;font-weight:700;letter-spacing:1px;color:var(--site-ink,#222)}
+h1{font-size:18px;text-align:center;margin:12px 0 16px;font-weight:700;letter-spacing:1px}
 h2{font-size:11px;color:var(--site-muted,#888);margin:16px 0 8px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
 .card{background:var(--site-card,#fff);border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.1);transition:background .3s}
 .watch-wrap{display:flex;justify-content:center;margin:8px 0 4px}
@@ -18,16 +18,17 @@ h2{font-size:11px;color:var(--site-muted,#888);margin:16px 0 8px;text-transform:
 .w-time{font-family:monospace;font-size:44px;font-weight:900;letter-spacing:-1px}
 .w-divider{height:1px;flex-shrink:0}
 .w-tz-bar{height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
-.themes{display:flex;flex-wrap:wrap;gap:8px}
+.themes{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
 .theme-btn{padding:8px 14px;border-radius:20px;border:2px solid #ddd;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
-.theme-btn.active{transform:scale(1.05)}
-.saved-schemes{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;min-height:0}
+.theme-btn.active{transform:scale(1.05);box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .color-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .color-item label{font-size:12px;color:var(--site-muted,#666);margin-bottom:4px;display:block}
 .color-swatch{width:100%;height:40px;border-radius:8px;border:1px solid #ddd;cursor:pointer;padding:3px}
-.scheme-name-row{display:flex;gap:8px;margin-top:12px}
-.scheme-name-row input{flex:1;padding:10px;border:1.5px solid var(--site-border,#ddd);border-radius:10px;font-size:15px;background:var(--site-card,#fff);color:var(--site-ink,#222)}
-.scheme-save-btn{padding:10px 16px;background:var(--accent,#76945c);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.row{display:flex;gap:8px;margin-top:10px}
+.row input[type=text]{flex:1;padding:10px;border:1.5px solid var(--site-border,#ddd);border-radius:10px;font-size:14px;background:var(--site-card,#fff);color:var(--site-ink,#222);outline:none}
+.row input:focus{border-color:var(--accent,#76945c)}
+.btn{padding:10px 16px;background:var(--accent,#76945c);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-outline{padding:10px 16px;background:transparent;color:var(--accent,#76945c);border:2px solid var(--accent,#76945c);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
 .search-wrap{position:relative}
 input[type=text]{width:100%;padding:10px 12px;border:1.5px solid var(--site-border,#ddd);border-radius:10px;font-size:15px;outline:none;background:var(--site-card,#fff);color:var(--site-ink,#222)}
 input:focus{border-color:var(--accent,#76945c)}
@@ -42,6 +43,8 @@ input:focus{border-color:var(--accent,#76945c)}
 .save-btn{display:block;width:100%;padding:15px;background:var(--accent,#76945c);color:#fff;border:none;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer;margin-top:8px}
 .save-btn:active{filter:brightness(.9);transform:scale(.98)}
 .city-selected{margin-top:6px;font-size:13px;color:var(--site-muted,#888)}
+.scheme-id-box{background:var(--site-bg,#f0f0f0);border-radius:8px;padding:10px;margin-top:8px;font-family:monospace;font-size:13px;word-break:break-all;display:none}
+.status{font-size:13px;margin-top:6px;color:var(--site-muted,#888)}
 </style>
 </head>
 <body>
@@ -64,26 +67,28 @@ input:focus{border-color:var(--accent,#76945c)}
 
 <div class="card">
 <h2>Built-in Themes</h2>
-<div class="themes" id="presets"></div>
-<div id="savedPresetsWrap" style="margin-top:10px;display:none">
-<h2 style="margin-top:0">My Saved Schemes</h2>
-<div class="themes" id="savedPresetBtns"></div>
-</div>
+<div class="themes" id="builtinThemes"></div>
+<h2 style="margin-top:12px">User Schemes</h2>
+<div class="themes" id="userSchemes"><span class="status">Loading...</span></div>
 </div>
 
 <div class="card">
-<h2>Colors</h2>
+<h2>Custom Colors</h2>
 <div class="color-grid">
   <div class="color-item"><label>Background</label><input type="color" class="color-swatch" id="cBg" value="#ffffff"></div>
   <div class="color-item"><label>Text &amp; Segments</label><input type="color" class="color-swatch" id="cInk" value="#1c2e0f"></div>
   <div class="color-item"><label>Accent (bars)</label><input type="color" class="color-swatch" id="cAccent" value="#76945c"></div>
 </div>
-<div class="scheme-name-row">
-  <input type="text" id="schemeName" placeholder="Name your color scheme...">
-  <button class="scheme-save-btn" onclick="saveScheme()">Save Scheme</button>
+<div class="row">
+  <input type="text" id="schemeName" placeholder="Name your scheme to share...">
+  <button class="btn" onclick="publishScheme()">Share</button>
 </div>
-<h2 style="margin-top:14px">Saved Schemes</h2>
-<div class="saved-schemes" id="savedSchemes"></div>
+<div class="scheme-id-box" id="schemeIdBox"></div>
+<div class="status" id="publishStatus"></div>
+<div class="row" style="margin-top:8px">
+  <input type="text" id="schemeIdInput" placeholder="Paste scheme ID to load...">
+  <button class="btn-outline" onclick="loadSchemeById()">Load</button>
+</div>
 </div>
 
 <div class="card">
@@ -104,7 +109,13 @@ input:focus{border-color:var(--accent,#76945c)}
 <button class="save-btn" onclick="saveSettings()">Save to Watch</button>
 
 <script>
-var THEMES = {
+// ── jsonbin.io config — free public storage ────────────────────────────────
+// Create a free account at jsonbin.io and put your API key + master bin ID here
+var JSONBIN_KEY = "YOUR_JSONBIN_API_KEY";
+var JSONBIN_BIN = "YOUR_MASTER_BIN_ID"; // bin that holds {schemes: [...]}
+
+// ── Themes ────────────────────────────────────────────────────────────────
+var BUILTIN_THEMES = {
   Green:   {bg:"#ffffff",ink:"#1c2e0f",accent:"#76945c"},
   Blue:    {bg:"#ffffff",ink:"#121e37",accent:"#406ea5"},
   Amber:   {bg:"#ffffff",ink:"#2e2008",accent:"#c48c2a"},
@@ -115,6 +126,7 @@ var THEMES = {
   Forest:  {bg:"#f5fff7",ink:"#0f2e18",accent:"#3a7a50"},
 };
 
+// ── Timezones ─────────────────────────────────────────────────────────────
 var TIMEZONES = [
   {label:"UTC",offset:0,city:"Universal"},{label:"LON",offset:0,city:"London"},
   {label:"DUB",offset:1,city:"Dublin"},{label:"LIS",offset:0,city:"Lisbon"},
@@ -145,25 +157,18 @@ var TIMEZONES = [
   {label:"MNL",offset:8,city:"Manila"},{label:"PER",offset:8,city:"Perth"},
   {label:"SEL",offset:9,city:"Seoul"},{label:"TYO",offset:9,city:"Tokyo"},
   {label:"ADL",offset:9.5,city:"Adelaide"},{label:"SYD",offset:10,city:"Sydney"},
-  {label:"MEL",offset:10,city:"Melbourne"},{label:"GUM",offset:10,city:"Guam"},
-  {label:"NOU",offset:11,city:"Noumea"},{label:"AKL",offset:12,city:"Auckland"},
-  {label:"FJI",offset:12,city:"Suva"},{label:"AZO",offset:-1,city:"Azores"},
-  {label:"HAV",offset:-5,city:"Havana"},{label:"NYC",offset:-5,city:"New York"},
-  {label:"MIA",offset:-5,city:"Miami"},{label:"BOS",offset:-5,city:"Boston"},
-  {label:"ATL",offset:-5,city:"Atlanta"},{label:"TOR",offset:-5,city:"Toronto"},
-  {label:"MTL",offset:-5,city:"Montreal"},{label:"BOG",offset:-5,city:"Bogota"},
-  {label:"LIM",offset:-5,city:"Lima"},{label:"CHI",offset:-6,city:"Chicago"},
+  {label:"MEL",offset:10,city:"Melbourne"},{label:"AKL",offset:12,city:"Auckland"},
+  {label:"NYC",offset:-5,city:"New York"},{label:"MIA",offset:-5,city:"Miami"},
+  {label:"BOS",offset:-5,city:"Boston"},{label:"ATL",offset:-5,city:"Atlanta"},
+  {label:"TOR",offset:-5,city:"Toronto"},{label:"CHI",offset:-6,city:"Chicago"},
   {label:"DAL",offset:-6,city:"Dallas"},{label:"HOU",offset:-6,city:"Houston"},
-  {label:"MTY",offset:-6,city:"Monterrey"},{label:"MEX",offset:-6,city:"Mexico City"},
-  {label:"DEN",offset:-7,city:"Denver"},{label:"PHX",offset:-7,city:"Phoenix"},
-  {label:"LAX",offset:-8,city:"Los Angeles"},{label:"SFO",offset:-8,city:"San Francisco"},
-  {label:"SEA",offset:-8,city:"Seattle"},{label:"VAN",offset:-8,city:"Vancouver"},
+  {label:"MEX",offset:-6,city:"Mexico City"},{label:"DEN",offset:-7,city:"Denver"},
+  {label:"PHX",offset:-7,city:"Phoenix"},{label:"LAX",offset:-8,city:"Los Angeles"},
+  {label:"SFO",offset:-8,city:"San Francisco"},{label:"SEA",offset:-8,city:"Seattle"},
   {label:"ANC",offset:-9,city:"Anchorage"},{label:"HNL",offset:-10,city:"Honolulu"},
-  {label:"SAO",offset:-3,city:"Sao Paulo"},{label:"RIO",offset:-3,city:"Rio de Janeiro"},
-  {label:"BUE",offset:-3,city:"Buenos Aires"},{label:"SCL",offset:-4,city:"Santiago"},
-  {label:"CCS",offset:-4,city:"Caracas"},{label:"ACC",offset:0,city:"Accra"},
-  {label:"LOS",offset:1,city:"Lagos"},{label:"DKR",offset:0,city:"Dakar"},
-  {label:"CMN",offset:1,city:"Casablanca"},{label:"ALG",offset:1,city:"Algiers"},
+  {label:"SAO",offset:-3,city:"Sao Paulo"},{label:"BUE",offset:-3,city:"Buenos Aires"},
+  {label:"SCL",offset:-4,city:"Santiago"},{label:"BOG",offset:-5,city:"Bogota"},
+  {label:"LIM",offset:-5,city:"Lima"},
 ];
 
 var state = {
@@ -172,147 +177,164 @@ var state = {
   tz: TIMEZONES.find(function(t){return t.label==="NYC";})
 };
 
-function hexToRgb(hex){
-  return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];
-}
-function rgbToHex(r,g,b){
-  return "#"+[r,g,b].map(function(v){return("0"+v.toString(16)).slice(-2);}).join("");
-}
-function blendHex(c1,c2,r){
-  var a=hexToRgb(c1),b=hexToRgb(c2);
-  return rgbToHex(Math.round(a[0]+(b[0]-a[0])*r),Math.round(a[1]+(b[1]-a[1])*r),Math.round(a[2]+(b[2]-a[2])*r));
-}
+// ── Utilities ─────────────────────────────────────────────────────────────
+function hexToRgb(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];}
+function rgbToHex(r,g,b){return"#"+[r,g,b].map(function(v){return("0"+v.toString(16)).slice(-2);}).join("");}
+function blendHex(c1,c2,r){var a=hexToRgb(c1),b=hexToRgb(c2);return rgbToHex(Math.round(a[0]+(b[0]-a[0])*r),Math.round(a[1]+(b[1]-a[1])*r),Math.round(a[2]+(b[2]-a[2])*r));}
 function calcGhost(accent,bg){return blendHex(accent,bg,0.7);}
-function isDark(hex){var rgb=hexToRgb(hex);return (rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000 < 128;}
+function isDark(hex){var rgb=hexToRgb(hex);return(rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000<128;}
+function getQueryParam(name){var q=window.location.search.substring(1),vars=q.split("&");for(var i=0;i<vars.length;i++){var p=vars[i].split("=");if(decodeURIComponent(p[0])===name)return decodeURIComponent(p[1]||"");}return null;}
 
 function applyThemeColors(bg, ink, accent) {
   document.getElementById("cBg").value     = bg;
   document.getElementById("cInk").value    = ink;
   document.getElementById("cAccent").value = accent;
-  state.bg = bg; state.ink = ink; state.accent = accent;
+  state.bg=bg; state.ink=ink; state.accent=accent;
   updateSiteTheme(bg, ink, accent);
   updatePreview();
 }
 
 function updateSiteTheme(bg, ink, accent) {
   var dark = isDark(bg);
-  var siteBg   = dark ? blendHex(bg,"#000000",0.3) : blendHex(bg,"#000000",0.06);
-  var siteCard = dark ? blendHex(bg,"#ffffff",0.08) : bg;
-  var siteMuted= dark ? blendHex(ink,"#000000",0.4) : blendHex(ink,"#ffffff",0.4);
-  var siteBorder=dark ? blendHex(bg,"#ffffff",0.15) : blendHex(bg,"#000000",0.12);
-  var siteHover= dark ? blendHex(bg,"#ffffff",0.1)  : blendHex(accent,"#ffffff",0.85);
-  document.documentElement.style.setProperty("--site-bg",    siteBg);
-  document.documentElement.style.setProperty("--site-card",  siteCard);
+  document.documentElement.style.setProperty("--site-bg",    dark?blendHex(bg,"#000000",0.3):blendHex(bg,"#000000",0.06));
+  document.documentElement.style.setProperty("--site-card",  dark?blendHex(bg,"#ffffff",0.08):bg);
   document.documentElement.style.setProperty("--site-ink",   ink);
-  document.documentElement.style.setProperty("--site-muted", siteMuted);
-  document.documentElement.style.setProperty("--site-border",siteBorder);
-  document.documentElement.style.setProperty("--site-hover", siteHover);
+  document.documentElement.style.setProperty("--site-muted", dark?blendHex(ink,"#000000",0.4):blendHex(ink,"#ffffff",0.4));
+  document.documentElement.style.setProperty("--site-border",dark?blendHex(bg,"#ffffff",0.15):blendHex(bg,"#000000",0.12));
+  document.documentElement.style.setProperty("--site-hover", dark?blendHex(bg,"#ffffff",0.1):blendHex(accent,"#ffffff",0.85));
   document.documentElement.style.setProperty("--accent",     accent);
 }
 
-// Build preset buttons
-var presetsDiv = document.getElementById("presets");
-Object.keys(THEMES).forEach(function(name) {
-  var t = THEMES[name];
+// ── Build built-in theme buttons ──────────────────────────────────────────
+Object.keys(BUILTIN_THEMES).forEach(function(name) {
+  var t = BUILTIN_THEMES[name];
   var btn = document.createElement("button");
   btn.className = "theme-btn";
   btn.textContent = name;
-  btn.style.background = t.bg;
-  btn.style.color = t.ink;
-  btn.style.borderColor = t.accent;
+  btn.style.background=t.bg; btn.style.color=t.ink; btn.style.borderColor=t.accent;
   btn.onclick = function() {
     applyThemeColors(t.bg, t.ink, t.accent);
     document.querySelectorAll(".theme-btn").forEach(function(b){b.classList.remove("active");});
     btn.classList.add("active");
   };
-  presetsDiv.appendChild(btn);
+  document.getElementById("builtinThemes").appendChild(btn);
 });
 
-// Saved schemes
-function makeSchemeBtn(s, saved, i, container) {
+// ── User schemes via jsonbin.io ───────────────────────────────────────────
+function schemeBtn(s) {
   var btn = document.createElement("button");
   btn.className = "theme-btn";
   btn.textContent = s.name;
-  btn.style.background = s.bg;
-  btn.style.color = s.ink;
-  btn.style.borderColor = s.accent;
-  btn.title = "Click to apply • Right-click to delete";
+  btn.style.background=s.bg; btn.style.color=s.ink; btn.style.borderColor=s.accent;
+  btn.title = "ID: " + (s.id||"");
   btn.onclick = function() {
     applyThemeColors(s.bg, s.ink, s.accent);
     document.querySelectorAll(".theme-btn").forEach(function(b){b.classList.remove("active");});
     btn.classList.add("active");
   };
-  btn.oncontextmenu = function(e) {
-    e.preventDefault();
-    if (confirm("Delete scheme '" + s.name + "'?")) {
-      saved.splice(i, 1);
-      localStorage.setItem("sl_schemes", JSON.stringify(saved));
-      loadSavedSchemes();
+  return btn;
+}
+
+function loadUserSchemes() {
+  var div = document.getElementById("userSchemes");
+  if (!JSONBIN_KEY || JSONBIN_KEY === "YOUR_JSONBIN_API_KEY") {
+    div.innerHTML = '<span class="status">Configure JSONBIN_KEY to enable shared schemes</span>';
+    return;
+  }
+  fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN + "/latest", {
+    headers: {"X-Master-Key": JSONBIN_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(data) {
+    var schemes = (data.record && data.record.schemes) || [];
+    div.innerHTML = "";
+    if (!schemes.length) {
+      div.innerHTML = '<span class="status">No shared schemes yet — be the first!</span>';
+      return;
     }
-  };
-  container.appendChild(btn);
+    schemes.forEach(function(s) { div.appendChild(schemeBtn(s)); });
+  }).catch(function() {
+    div.innerHTML = '<span class="status">Could not load shared schemes</span>';
+  });
 }
 
-function loadSavedSchemes() {
-  var saved = JSON.parse(localStorage.getItem("sl_schemes") || "[]");
-
-  // Schemes in colors card
-  var div = document.getElementById("savedSchemes");
-  div.innerHTML = "";
-  if (!saved.length) {
-    div.innerHTML = '<span style="font-size:13px;color:var(--site-muted,#888)">No saved schemes yet</span>';
-  } else {
-    saved.forEach(function(s, i) { makeSchemeBtn(s, saved, i, div); });
-  }
-
-  // Schemes in presets section
-  var wrap = document.getElementById("savedPresetsWrap");
-  var presetBtns = document.getElementById("savedPresetBtns");
-  presetBtns.innerHTML = "";
-  if (saved.length) {
-    wrap.style.display = "block";
-    saved.forEach(function(s, i) { makeSchemeBtn(s, saved, i, presetBtns); });
-  } else {
-    wrap.style.display = "none";
-  }
-}
-
-function saveScheme() {
+function publishScheme() {
   var name = document.getElementById("schemeName").value.trim();
   if (!name) { alert("Enter a name for your scheme"); return; }
-  var bg     = document.getElementById("cBg").value;
-  var ink    = document.getElementById("cInk").value;
-  var accent = document.getElementById("cAccent").value;
-  var saved  = JSON.parse(localStorage.getItem("sl_schemes") || "[]");
-  // Check if already saved
-  var exists = saved.find(function(s){ return s.name.toLowerCase() === name.toLowerCase(); });
-  if (exists) {
-    if (!confirm("A scheme named '" + name + "' already exists. Overwrite?")) return;
-    exists.bg = bg; exists.ink = ink; exists.accent = accent;
-  } else {
-    saved.push({name:name, bg:bg, ink:ink, accent:accent});
+  if (!JSONBIN_KEY || JSONBIN_KEY === "YOUR_JSONBIN_API_KEY") {
+    alert("Configure JSONBIN_KEY in config.html to share schemes"); return;
   }
-  localStorage.setItem("sl_schemes", JSON.stringify(saved));
-  document.getElementById("schemeName").value = "";
-  loadSavedSchemes();
+  var bg=document.getElementById("cBg").value;
+  var ink=document.getElementById("cInk").value;
+  var accent=document.getElementById("cAccent").value;
+  var status = document.getElementById("publishStatus");
+  status.textContent = "Saving...";
+
+  // First fetch current schemes
+  fetch("https://api.jsonbin.io/v3/b/"+JSONBIN_BIN+"/latest",{
+    headers:{"X-Master-Key":JSONBIN_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(data) {
+    var schemes = (data.record && data.record.schemes) || [];
+    // Check duplicate name
+    var exists = schemes.find(function(s){return s.name.toLowerCase()===name.toLowerCase();});
+    if (exists) {
+      status.textContent = "A scheme named '"+name+"' already exists!";
+      return;
+    }
+    var newScheme = {name:name, bg:bg, ink:ink, accent:accent, id: Date.now().toString(36)};
+    schemes.push(newScheme);
+    // Update bin
+    return fetch("https://api.jsonbin.io/v3/b/"+JSONBIN_BIN,{
+      method:"PUT",
+      headers:{"Content-Type":"application/json","X-Master-Key":JSONBIN_KEY},
+      body:JSON.stringify({schemes:schemes})
+    });
+  }).then(function(r){ if(r) return r.json(); })
+  .then(function(data) {
+    if (data) {
+      status.textContent = "✓ Shared! Others can now see your '"+name+"' scheme.";
+      document.getElementById("schemeName").value = "";
+      loadUserSchemes();
+    }
+  }).catch(function() {
+    status.textContent = "Failed to share scheme — check your API key";
+  });
 }
 
-// Timezone list
+function loadSchemeById() {
+  var id = document.getElementById("schemeIdInput").value.trim();
+  if (!id || !JSONBIN_KEY || JSONBIN_KEY === "YOUR_JSONBIN_API_KEY") return;
+  fetch("https://api.jsonbin.io/v3/b/"+JSONBIN_BIN+"/latest",{
+    headers:{"X-Master-Key":JSONBIN_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(data) {
+    var schemes = (data.record && data.record.schemes) || [];
+    var found = schemes.find(function(s){return s.id===id;});
+    if (found) {
+      applyThemeColors(found.bg, found.ink, found.accent);
+      document.getElementById("schemeIdInput").value = "";
+    } else {
+      alert("Scheme ID not found");
+    }
+  });
+}
+
+// ── Timezone list ─────────────────────────────────────────────────────────
 function renderTzList(filter) {
   var list = document.getElementById("tzList");
   list.innerHTML = "";
   var filtered = TIMEZONES.filter(function(tz) {
     if (!filter) return true;
-    var q = filter.toLowerCase();
-    return tz.city.toLowerCase().indexOf(q) >= 0 || tz.label.toLowerCase().indexOf(q) >= 0;
+    var q=filter.toLowerCase();
+    return tz.city.toLowerCase().indexOf(q)>=0||tz.label.toLowerCase().indexOf(q)>=0;
   });
   filtered.forEach(function(tz) {
     var item = document.createElement("div");
-    item.className = "tz-item" + (state.tz && state.tz.label===tz.label ? " selected" : "");
-    var sign = tz.offset >= 0 ? "+" : "";
-    item.innerHTML = '<span>' + tz.city + ' <b>' + tz.label + '</b></span><span class="tz-offset">UTC'+sign+tz.offset+'</span>';
+    item.className = "tz-item"+(state.tz&&state.tz.label===tz.label?" selected":"");
+    var sign=tz.offset>=0?"+":"";
+    item.innerHTML='<span>'+tz.city+' <b>'+tz.label+'</b></span><span class="tz-offset">UTC'+sign+tz.offset+'</span>';
     item.onclick = function() {
-      state.tz = tz;
+      state.tz=tz;
       document.querySelectorAll(".tz-item").forEach(function(i){i.classList.remove("selected");});
       item.classList.add("selected");
       updatePreview();
@@ -321,123 +343,117 @@ function renderTzList(filter) {
   });
 }
 renderTzList("");
-document.getElementById("tzSearch").addEventListener("input", function(){renderTzList(this.value);});
+document.getElementById("tzSearch").addEventListener("input",function(){renderTzList(this.value);});
 
-// City search
-var searchTimer = null;
-document.getElementById("cityInput").addEventListener("input", function() {
+// ── City search ───────────────────────────────────────────────────────────
+var searchTimer=null;
+document.getElementById("cityInput").addEventListener("input",function(){
   clearTimeout(searchTimer);
-  var q = this.value.trim();
-  if (q.length < 3) { document.getElementById("suggestions").style.display="none"; return; }
-  searchTimer = setTimeout(function(){searchCity(q);}, 300);
+  var q=this.value.trim();
+  if(q.length<3){document.getElementById("suggestions").style.display="none";return;}
+  searchTimer=setTimeout(function(){searchCity(q);},300);
 });
-
 function searchCity(q) {
   fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(q)+"&count=6&language=en")
     .then(function(r){return r.json();})
-    .then(function(data) {
-      var sug = document.getElementById("suggestions");
-      sug.innerHTML = "";
-      if (!data.results||!data.results.length){sug.style.display="none";return;}
-      data.results.forEach(function(r) {
-        var item = document.createElement("div");
-        item.className = "suggest-item";
-        var admin = r.admin1 ? ", "+r.admin1 : "";
-        var label = r.name + admin + " (" + (r.country_code||"") + ")";
-        item.textContent = label;
-        item.onclick = function() {
-          document.getElementById("cityInput").value = "";
-          document.getElementById("citySelected").textContent = "📍 " + label;
-          state.lat = r.latitude;
-          state.lon = r.longitude;
-          state.cityName = label;
-          sug.style.display = "none";
+    .then(function(data){
+      var sug=document.getElementById("suggestions");
+      sug.innerHTML="";
+      if(!data.results||!data.results.length){sug.style.display="none";return;}
+      data.results.forEach(function(r){
+        var item=document.createElement("div");
+        item.className="suggest-item";
+        var admin=r.admin1?", "+r.admin1:"";
+        var lbl=r.name+admin+" ("+(r.country_code||"")+")";
+        item.textContent=lbl;
+        item.onclick=function(){
+          document.getElementById("cityInput").value="";
+          document.getElementById("citySelected").textContent="📍 "+lbl;
+          state.lat=r.latitude; state.lon=r.longitude; state.cityName=lbl;
+          sug.style.display="none";
         };
         sug.appendChild(item);
       });
-      sug.style.display = "block";
+      sug.style.display="block";
     }).catch(function(){});
 }
-document.addEventListener("click", function(e) {
-  if (!e.target.closest(".search-wrap"))
-    document.getElementById("suggestions").style.display = "none";
+document.addEventListener("click",function(e){
+  if(!e.target.closest(".search-wrap"))
+    document.getElementById("suggestions").style.display="none";
 });
 
-// Preview update
+// ── Live preview ──────────────────────────────────────────────────────────
 function updatePreview() {
-  var bg     = document.getElementById("cBg").value;
-  var ink    = document.getElementById("cInk").value;
-  var accent = document.getElementById("cAccent").value;
-  state.bg = bg; state.ink = ink; state.accent = accent;
-
-  var w = document.getElementById("watch");
-  w.style.background = bg;
-  document.getElementById("wTopBar").style.background = accent;
-  document.getElementById("wTopBar").style.color = bg;
-  document.getElementById("wBotBar").style.background = accent;
-  document.getElementById("wBotBar").style.color = bg;
-  document.getElementById("wRow1").style.color = ink;
-  document.getElementById("wRow2").style.color = ink;
-  document.getElementById("wTime").style.color = ink;
-  document.getElementById("wDiv1").style.background = accent;
-  document.getElementById("wDiv2").style.background = accent;
+  var bg=document.getElementById("cBg").value;
+  var ink=document.getElementById("cInk").value;
+  var accent=document.getElementById("cAccent").value;
+  state.bg=bg; state.ink=ink; state.accent=accent;
+  var w=document.getElementById("watch");
+  w.style.background=bg;
+  document.getElementById("wTopBar").style.background=accent;
+  document.getElementById("wTopBar").style.color=bg;
+  document.getElementById("wBotBar").style.background=accent;
+  document.getElementById("wBotBar").style.color=bg;
+  document.getElementById("wRow1").style.color=ink;
+  document.getElementById("wRow2").style.color=ink;
+  document.getElementById("wTime").style.color=ink;
+  document.getElementById("wDiv1").style.background=accent;
+  document.getElementById("wDiv2").style.background=accent;
   ["r1a","r1b","r1c","r2a","r2b","r2c"].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) el.style.color = accent;
+    var el=document.getElementById(id);
+    if(el) el.style.color=accent;
   });
-
-  // TZ2 time centered in bottom bar
-  if (state.tz) {
-    var now = new Date();
-    var utc = now.getTime() + now.getTimezoneOffset()*60000;
-    var tz2 = new Date(utc + Number(state.tz.offset)*3600000);
-    var h = tz2.getHours(), m = tz2.getMinutes();
-    var ampm = h < 12 ? "AM" : "PM";
-    var h12 = h%12||12;
-    document.getElementById("wTZ").textContent = state.tz.label+" "+h12+":"+("0"+m).slice(-2)+" "+ampm;
+  if(state.tz){
+    var now=new Date();
+    var utc=now.getTime()+now.getTimezoneOffset()*60000;
+    var tz2=new Date(utc+Number(state.tz.offset)*3600000);
+    var h=tz2.getHours(),m=tz2.getMinutes();
+    var ampm=h<12?"AM":"PM";
+    document.getElementById("wTZ").textContent=state.tz.label+" "+(h%12||12)+":"+("0"+m).slice(-2)+" "+ampm;
   }
-  var now2 = new Date();
-  var h2 = now2.getHours()%12||12;
-  document.getElementById("wTime").textContent = ("0"+h2).slice(-2)+":"+("0"+now2.getMinutes()).slice(-2);
-
-  updateSiteTheme(bg, ink, accent);
+  var n=new Date(),h2=n.getHours()%12||12;
+  document.getElementById("wTime").textContent=("0"+h2).slice(-2)+":"+("0"+n.getMinutes()).slice(-2);
+  updateSiteTheme(bg,ink,accent);
 }
-setInterval(updatePreview, 30000);
+setInterval(updatePreview,30000);
 ["cBg","cInk","cAccent"].forEach(function(id){
-  document.getElementById(id).addEventListener("input", updatePreview);
+  document.getElementById(id).addEventListener("input",updatePreview);
 });
 
-// Load settings from URL hash
+// ── Load from query params (passed by Pebble app on showConfiguration) ────
 function loadSettings() {
-  if (location.hash && location.hash.length > 1) {
-    try {
-      var cfg = JSON.parse(decodeURIComponent(location.hash.slice(1)));
-      if (cfg.bg)     document.getElementById("cBg").value     = cfg.bg;
-      if (cfg.ink)    document.getElementById("cInk").value    = cfg.ink;
-      if (cfg.accent) document.getElementById("cAccent").value = cfg.accent;
-      if (cfg.lat)    state.lat = cfg.lat;
-      if (cfg.lon)    state.lon = cfg.lon;
-      if (cfg.cityName) {
-        state.cityName = cfg.cityName;
-        document.getElementById("citySelected").textContent = "📍 " + cfg.cityName;
-      }
-      if (cfg.tz) {
-        var found = TIMEZONES.find(function(t){return t.label===cfg.tz.label;});
-        if (found) { state.tz = found; renderTzList(""); }
-      }
-    } catch(e) {}
+  var bg     = getQueryParam("bg")     || "#ffffff";
+  var ink    = getQueryParam("ink")    || "#1c2e0f";
+  var accent = getQueryParam("accent") || "#76945c";
+  var lat    = getQueryParam("lat");
+  var lon    = getQueryParam("lon");
+  var city   = getQueryParam("city");
+  var tzLabel= getQueryParam("tz");
+
+  document.getElementById("cBg").value     = bg;
+  document.getElementById("cInk").value    = ink;
+  document.getElementById("cAccent").value = accent;
+
+  if (lat) state.lat = parseFloat(lat);
+  if (lon) state.lon = parseFloat(lon);
+  if (city) {
+    state.cityName = decodeURIComponent(city);
+    document.getElementById("citySelected").textContent = "📍 " + state.cityName;
   }
-  loadSavedSchemes();
+  if (tzLabel) {
+    var found = TIMEZONES.find(function(t){return t.label===tzLabel;});
+    if (found) { state.tz=found; renderTzList(""); }
+  }
+  loadUserSchemes();
   updatePreview();
 }
 
-// Save to Pebble
+// ── Save to Pebble ────────────────────────────────────────────────────────
 function saveSettings() {
   var bg     = document.getElementById("cBg").value;
   var ink    = document.getElementById("cInk").value;
   var accent = document.getElementById("cAccent").value;
   var ghost  = calcGhost(accent, bg);
-  function pack(hex){var r=hexToRgb(hex);return r[0]*65536+r[1]*256+r[2];}
   var result = {
     bg:bg, ink:ink, accent:accent, ghost:ghost,
     bgRgb:hexToRgb(bg), inkRgb:hexToRgb(ink),
@@ -445,17 +461,8 @@ function saveSettings() {
     lat:state.lat, lon:state.lon, cityName:state.cityName,
     tz:state.tz,
   };
-  var ua = navigator.userAgent;
-  if (ua.indexOf("Pebble")>=0||ua.indexOf("PebbleKit")>=0) {
-    location.href = "pebblejs://close#" + encodeURIComponent(JSON.stringify(result));
-  } else {
-    // Desktop preview mode — show confirmation
-    var msg = document.createElement("div");
-    msg.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent,#76945c);color:#fff;padding:12px 24px;border-radius:10px;font-weight:600;font-size:15px;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,.3)";
-    msg.textContent = "✓ Settings saved (open in Pebble app to send to watch)";
-    document.body.appendChild(msg);
-    setTimeout(function(){ document.body.removeChild(msg); }, 3000);
-  }
+  // Always use pebblejs://close# — this is the correct Pebble webview close pattern
+  document.location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(result));
 }
 
 loadSettings();
