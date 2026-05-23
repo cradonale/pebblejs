@@ -109,10 +109,10 @@ input:focus{border-color:var(--accent,#76945c)}
 <button class="save-btn" onclick="saveSettings()">Save to Watch</button>
 
 <script>
-// ── jsonbin.io config — free public storage ────────────────────────────────
-// Create a free account at jsonbin.io and put your API key + master bin ID here
-var JSONBIN_KEY = "YOUR_JSONBIN_API_KEY";
-var JSONBIN_BIN = "YOUR_MASTER_BIN_ID"; // bin that holds {schemes: [...]}
+// ── jsonbin.io config ────────────────────────────────────────────────────
+// BIN_ID is public — safe to expose (read-only public bin)
+// Writing is done via index.js on the phone (key stays private there)
+var JSONBIN_BIN = "YOUR_MASTER_BIN_ID";
 
 // ── Themes ────────────────────────────────────────────────────────────────
 var BUILTIN_THEMES = {
@@ -237,13 +237,13 @@ function schemeBtn(s) {
 
 function loadUserSchemes() {
   var div = document.getElementById("userSchemes");
-  if (!JSONBIN_KEY || JSONBIN_KEY === "YOUR_JSONBIN_API_KEY") {
-    div.innerHTML = '<span class="status">Configure JSONBIN_KEY to enable shared schemes</span>';
+  if (!JSONBIN_BIN || JSONBIN_BIN === "YOUR_MASTER_BIN_ID") {
+    div.innerHTML = '<span class="status">Shared schemes not configured yet</span>';
     return;
   }
-  fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN + "/latest", {
-    headers: {"X-Master-Key": JSONBIN_KEY}
-  }).then(function(r){return r.json();})
+  // Public bin — no key needed for reads
+  fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN + "/latest")
+  .then(function(r){return r.json();})
   .then(function(data) {
     var schemes = (data.record && data.record.schemes) || [];
     div.innerHTML = "";
@@ -260,53 +260,24 @@ function loadUserSchemes() {
 function publishScheme() {
   var name = document.getElementById("schemeName").value.trim();
   if (!name) { alert("Enter a name for your scheme"); return; }
-  if (!JSONBIN_KEY || JSONBIN_KEY === "YOUR_JSONBIN_API_KEY") {
-    alert("Configure JSONBIN_KEY in config.html to share schemes"); return;
-  }
   var bg=document.getElementById("cBg").value;
   var ink=document.getElementById("cInk").value;
   var accent=document.getElementById("cAccent").value;
-  var status = document.getElementById("publishStatus");
-  status.textContent = "Saving...";
-
-  // First fetch current schemes
-  fetch("https://api.jsonbin.io/v3/b/"+JSONBIN_BIN+"/latest",{
-    headers:{"X-Master-Key":JSONBIN_KEY}
-  }).then(function(r){return r.json();})
-  .then(function(data) {
-    var schemes = (data.record && data.record.schemes) || [];
-    // Check duplicate name
-    var exists = schemes.find(function(s){return s.name.toLowerCase()===name.toLowerCase();});
-    if (exists) {
-      status.textContent = "A scheme named '"+name+"' already exists!";
-      return;
-    }
-    var newScheme = {name:name, bg:bg, ink:ink, accent:accent, id: Date.now().toString(36)};
-    schemes.push(newScheme);
-    // Update bin
-    return fetch("https://api.jsonbin.io/v3/b/"+JSONBIN_BIN,{
-      method:"PUT",
-      headers:{"Content-Type":"application/json","X-Master-Key":JSONBIN_KEY},
-      body:JSON.stringify({schemes:schemes})
-    });
-  }).then(function(r){ if(r) return r.json(); })
-  .then(function(data) {
-    if (data) {
-      status.textContent = "✓ Shared! Others can now see your '"+name+"' scheme.";
-      document.getElementById("schemeName").value = "";
-      loadUserSchemes();
-    }
-  }).catch(function() {
-    status.textContent = "Failed to share scheme — check your API key";
-  });
+  // Send scheme to index.js for publishing — key stays on phone
+  // We close with a special action flag so index.js knows to publish, not save
+  var result = {
+    action: "publish_scheme",
+    scheme: {name:name, bg:bg, ink:ink, accent:accent, id:Date.now().toString(36)}
+  };
+  document.getElementById("publishStatus").textContent = "Sending to phone to publish...";
+  document.location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(result));
 }
 
 function loadSchemeById() {
   var id = document.getElementById("schemeIdInput").value.trim();
-  if (!id || !JSONBIN_KEY || JSONBIN_KEY === "YOUR_JSONBIN_API_KEY") return;
-  fetch("https://api.jsonbin.io/v3/b/"+JSONBIN_BIN+"/latest",{
-    headers:{"X-Master-Key":JSONBIN_KEY}
-  }).then(function(r){return r.json();})
+  if (!id || !JSONBIN_BIN || JSONBIN_BIN === "YOUR_MASTER_BIN_ID") return;
+  fetch("https://api.jsonbin.io/v3/b/"+JSONBIN_BIN+"/latest")
+  .then(function(r){return r.json();})
   .then(function(data) {
     var schemes = (data.record && data.record.schemes) || [];
     var found = schemes.find(function(s){return s.id===id;});
