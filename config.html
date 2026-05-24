@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Watchface Config</title>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+      padding: 18px;
+    }
+    h2 { margin-top: 0; }
+    label {
+      display: block;
+      margin-top: 14px;
+      font-weight: bold;
+    }
+    select, input, button {
+      width: 100%;
+      margin-top: 6px;
+      padding: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #fff;
+      color: #000;
+      border: none;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    button:active { background: #ddd; }
+    .hint {
+      margin-top: 10px;
+      color: #aaa;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Watchface Settings</h2>
+
+  <label>Time Format</label>
+  <select id="use_24h">
+    <option value="1">24 Hour</option>
+    <option value="0">12 Hour</option>
+  </select>
+
+  <label id="tl_metric_label">Top Left</label>
+  <select id="tl_metric">
+    <option value="4">Off</option>
+    <option value="0">Battery</option>
+    <option value="1">Day</option>
+    <option value="2">Bluetooth</option>
+    <option value="3">Steps</option>
+    <option value="5">Calendar Week</option>
+    <option value="6">Calendar Day</option>
+    <option value="7">Distance</option>
+    <option value="8">Active Time</option>
+    <option value="9" class="hr-option">Heart Rate</option>
+  </select>
+
+  <label id="tr_metric_label">Top Right</label>
+  <select id="tr_metric">
+    <option value="4">Off</option>
+    <option value="0">Battery</option>
+    <option value="1">Day</option>
+    <option value="2">Bluetooth</option>
+    <option value="3">Steps</option>
+    <option value="5">Calendar Week</option>
+    <option value="6">Calendar Day</option>
+    <option value="7">Distance</option>
+    <option value="8">Active Time</option>
+    <option value="9" class="hr-option">Heart Rate</option>
+  </select>
+
+  <label id="bl_metric_label">Bottom Left</label>
+  <select id="bl_metric">
+    <option value="4">Off</option>
+    <option value="0">Battery</option>
+    <option value="1">Day</option>
+    <option value="2">Bluetooth</option>
+    <option value="3">Steps</option>
+    <option value="5">Calendar Week</option>
+    <option value="6">Calendar Day</option>
+    <option value="7">Distance</option>
+    <option value="8">Active Time</option>
+    <option value="9" class="hr-option">Heart Rate</option>
+  </select>
+
+  <label id="br_metric_label">Bottom Right</label>
+  <select id="br_metric">
+    <option value="4">Off</option>
+    <option value="0">Battery</option>
+    <option value="1">Day</option>
+    <option value="2">Bluetooth</option>
+    <option value="3">Steps</option>
+    <option value="5">Calendar Week</option>
+    <option value="6">Calendar Day</option>
+    <option value="7">Distance</option>
+    <option value="8">Active Time</option>
+    <option value="9" class="hr-option">Heart Rate</option>
+  </select>
+
+  <label>Steps Goal</label>
+  <input id="steps_goal" type="number" min="1000" step="500">
+
+  <label>Distance Goal (meters)</label>
+  <input id="distance_goal" type="number" min="100" step="100">
+
+  <label>Active Time Goal (seconds)</label>
+  <input id="active_time_goal" type="number" min="60" step="60">
+
+  <label>Seconds Animation</label>
+  <select id="seconds_animation_mode">
+    <option value="0">Show Ring + Animate 5s</option>
+    <option value="1">Hide Ring + Animate 5s</option>
+    <option value="2">Show Ring + Animate 10s</option>
+    <option value="3">Hide Ring + Animate 10s</option>
+    <option value="4">Show Ring + Always Animate</option>
+    <option value="5">Hide Ring + Always Animate</option>
+  </select>
+
+  <label id="tl_color_label">Top Left Color</label>
+  <input id="tl_color" type="color" value="#ff0000">
+
+  <label id="tr_color_label">Top Right Color</label>
+  <input id="tr_color" type="color" value="#0000ff">
+
+  <label id="bl_color_label">Bottom Left Color</label>
+  <input id="bl_color" type="color" value="#ffcc00">
+
+  <label id="br_color_label">Bottom Right Color</label>
+  <input id="br_color" type="color" value="#00ff00">
+
+  <div class="hint" id="layout_hint"></div>
+
+  <button onclick="saveSettings()">Save Settings</button>
+
+  <script>
+    /* ── URL param helpers ─────────────────────────────────────────────── */
+
+    function getQueryParam(name) {
+      var query = window.location.search.substring(1);
+      var vars = query.split('&');
+      for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split('=');
+        if (decodeURIComponent(pair[0]) === name) {
+          return decodeURIComponent(pair[1] || '');
+        }
+      }
+      return null;
+    }
+
+    function toHexColor(value, fallback) {
+      var n = parseInt(value, 10);
+      if (isNaN(n)) { n = fallback; }
+      var hex = n.toString(16);
+      while (hex.length < 6) { hex = '0' + hex; }
+      return '#' + hex;
+    }
+
+    /* ── Layout detection ──────────────────────────────────────────────── */
+
+    function isGabbroLayout() {
+      var platform = (getQueryParam('platform') || '').toLowerCase();
+      return platform === 'gabbro';
+    }
+
+    function applyLayoutLabels() {
+      if (!isGabbroLayout()) { return; }
+      document.getElementById('tl_metric_label').textContent = 'Top';
+      document.getElementById('tr_metric_label').textContent = 'Right';
+      document.getElementById('bl_metric_label').textContent = 'Left';
+      document.getElementById('br_metric_label').textContent = 'Bottom';
+      document.getElementById('tl_color_label').textContent  = 'Top Color';
+      document.getElementById('tr_color_label').textContent  = 'Right Color';
+      document.getElementById('bl_color_label').textContent  = 'Left Color';
+      document.getElementById('br_color_label').textContent  = 'Bottom Color';
+      document.getElementById('layout_hint').textContent =
+        'Round watch layout: Top, Right, Left, Bottom';
+    }
+
+    function disableHeartRateForGabbro() {
+      if (!isGabbroLayout()) { return; }
+      var hrOptions = document.querySelectorAll('.hr-option');
+      for (var i = 0; i < hrOptions.length; i++) {
+        hrOptions[i].style.display = 'none';
+      }
+      ['tl_metric', 'tr_metric', 'bl_metric', 'br_metric'].forEach(function(id) {
+        var select = document.getElementById(id);
+        if (select.value === '9') { select.value = '4'; }
+      });
+    }
+
+    /* ── Populate from current watch values passed as query params ─────── */
+
+    function setInitialValues() {
+      document.getElementById('use_24h').value               = getQueryParam('use_24h')               || '1';
+      document.getElementById('tl_metric').value             = getQueryParam('tl_metric')             || '0';
+      document.getElementById('tr_metric').value             = getQueryParam('tr_metric')             || '1';
+      document.getElementById('bl_metric').value             = getQueryParam('bl_metric')             || '2';
+      document.getElementById('br_metric').value             = getQueryParam('br_metric')             || '3';
+      document.getElementById('steps_goal').value            = getQueryParam('steps_goal')            || '8000';
+      document.getElementById('distance_goal').value         = getQueryParam('distance_goal')         || '5000';
+      document.getElementById('active_time_goal').value      = getQueryParam('active_time_goal')      || '1800';
+      document.getElementById('seconds_animation_mode').value= getQueryParam('seconds_animation_mode')|| '0';
+      document.getElementById('tl_color').value = toHexColor(getQueryParam('tl_color'), 0xFF0000);
+      document.getElementById('tr_color').value = toHexColor(getQueryParam('tr_color'), 0x0000FF);
+      document.getElementById('bl_color').value = toHexColor(getQueryParam('bl_color'), 0xFFCC00);
+      document.getElementById('br_color').value = toHexColor(getQueryParam('br_color'), 0x00FF00);
+    }
+
+    /* ── Save — closes the webview and returns data to pebble-js-app.js ── */
+
+    function saveSettings() {
+      var configData = {
+        tl_metric:              parseInt(document.getElementById('tl_metric').value,              10),
+        tr_metric:              parseInt(document.getElementById('tr_metric').value,              10),
+        bl_metric:              parseInt(document.getElementById('bl_metric').value,              10),
+        br_metric:              parseInt(document.getElementById('br_metric').value,              10),
+        tl_color:               parseInt(document.getElementById('tl_color').value.substring(1), 16),
+        tr_color:               parseInt(document.getElementById('tr_color').value.substring(1), 16),
+        bl_color:               parseInt(document.getElementById('bl_color').value.substring(1), 16),
+        br_color:               parseInt(document.getElementById('br_color').value.substring(1), 16),
+        use_24h:                parseInt(document.getElementById('use_24h').value,                10),
+        steps_goal:             parseInt(document.getElementById('steps_goal').value,             10),
+        distance_goal:          parseInt(document.getElementById('distance_goal').value,          10),
+        active_time_goal:       parseInt(document.getElementById('active_time_goal').value,       10),
+        seconds_animation_mode: parseInt(document.getElementById('seconds_animation_mode').value, 10)
+      };
+
+      // This closes the Pebble webview and passes the data back to
+      // pebble-js-app.js via the 'webviewclosed' event.
+      var encoded = encodeURIComponent(JSON.stringify(configData));
+      document.location = 'pebblejs://close#' + encoded;
+    }
+
+    /* ── Boot ──────────────────────────────────────────────────────────── */
+    applyLayoutLabels();
+    setInitialValues();
+    disableHeartRateForGabbro();
+  </script>
+</body>
+</html>
