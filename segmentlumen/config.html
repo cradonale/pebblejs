@@ -43,7 +43,7 @@ input:focus{border-color:var(--accent,#76945c)}
 </style>
 </head>
 <body>
-<h1>SEGMENT LUMEN</h1>
+<h1>⌚ SEGMENT LUMEN</h1>
 
 <div class="card">
 <h2>Preview</h2>
@@ -93,6 +93,14 @@ input:focus{border-color:var(--accent,#76945c)}
   <div id="suggestions"></div>
 </div>
 <div class="city-selected" id="citySelected"></div>
+</div>
+
+<div class="card">
+<h2>Temperature Unit</h2>
+<div style="display:flex;gap:10px">
+  <button id="btnC" class="theme-btn active" onclick="setTempUnit(false)" style="flex:1;border-radius:10px">°C Celsius</button>
+  <button id="btnF" class="theme-btn"        onclick="setTempUnit(true)"  style="flex:1;border-radius:10px">°F Fahrenheit</button>
+</div>
 </div>
 
 <div class="card">
@@ -181,6 +189,7 @@ var TIMEZONES = [
 var state = {
   bg:"#ffffff", ink:"#1c2e0f", accent:"#76945c",
   lat:32.81, lon:-96.95, cityName:"Irving, TX",
+  useF: false,
   tz: TIMEZONES.find(function(t){return t.label==="NYC";})
 };
 
@@ -455,6 +464,8 @@ function loadSettings() {
   var lon    = getQueryParam("lon");
   var city   = getQueryParam("city");
   var tzLabel= getQueryParam("tz");
+  var useF   = getQueryParam("useF");
+  if (useF === "1") setTempUnit(true);
 
   document.getElementById("cBg").value     = bg;
   document.getElementById("cInk").value    = ink;
@@ -476,6 +487,14 @@ function loadSettings() {
 }
 
 // ── Save to Pebble ────────────────────────────────────────────────────────
+function setTempUnit(useF) {
+  state.useF = useF;
+  document.getElementById("btnC").classList.toggle("active", !useF);
+  document.getElementById("btnF").classList.toggle("active",  useF);
+  // Update preview label
+  document.getElementById("r2a").textContent = useF ? "F" : "C";
+}
+
 function saveSettings() {
   var bg     = document.getElementById("cBg").value;
   var ink    = document.getElementById("cInk").value;
@@ -494,6 +513,7 @@ function saveSettings() {
     bgRgb:hexToRgb(bg), inkRgb:hexToRgb(ink),
     accentRgb:hexToRgb(accent), ghostRgb:hexToRgb(ghost),
     lat:state.lat, lon:state.lon, cityName:state.cityName,
+    useF:state.useF,
     tz:tzForSave,
   };
   // Always use pebblejs://close# — this is the correct Pebble webview close pattern
