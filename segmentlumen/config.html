@@ -121,48 +121,61 @@ var BUILTIN_THEMES = {
 };
 
 // ── Timezones ─────────────────────────────────────────────────────────────
+// Helper: get DST-aware current UTC offset for an IANA timezone
+function getCurrentOffset(iana) {
+  if (!iana || typeof Intl === "undefined") return null;
+  try {
+    var now = new Date();
+    var utc = now.getTime();
+    // Get the time in the target zone
+    var local = new Date(now.toLocaleString("en-US", {timeZone: iana}));
+    var diff = (local - new Date(now.toLocaleString("en-US", {timeZone: "UTC"}))) / 3600000;
+    return Math.round(diff * 100) / 100;
+  } catch(e) { return null; }
+}
+
 var TIMEZONES = [
-  {label:"UTC",offset:0,city:"Universal"},{label:"LON",offset:0,city:"London"},
-  {label:"DUB",offset:1,city:"Dublin"},{label:"LIS",offset:0,city:"Lisbon"},
-  {label:"MAD",offset:1,city:"Madrid"},{label:"PAR",offset:1,city:"Paris"},
-  {label:"BER",offset:1,city:"Berlin"},{label:"ROM",offset:1,city:"Rome"},
-  {label:"AMS",offset:1,city:"Amsterdam"},{label:"BCN",offset:1,city:"Barcelona"},
-  {label:"VIE",offset:1,city:"Vienna"},{label:"ZRH",offset:1,city:"Zurich"},
-  {label:"BRU",offset:1,city:"Brussels"},{label:"WAW",offset:1,city:"Warsaw"},
-  {label:"BUD",offset:1,city:"Budapest"},{label:"PRG",offset:1,city:"Prague"},
-  {label:"STO",offset:1,city:"Stockholm"},{label:"OSL",offset:1,city:"Oslo"},
-  {label:"CPH",offset:1,city:"Copenhagen"},{label:"HEL",offset:2,city:"Helsinki"},
-  {label:"RIG",offset:2,city:"Riga"},{label:"ATH",offset:2,city:"Athens"},
-  {label:"CAI",offset:2,city:"Cairo"},{label:"JRS",offset:2,city:"Jerusalem"},
-  {label:"JNB",offset:2,city:"Johannesburg"},{label:"MOS",offset:3,city:"Moscow"},
-  {label:"IST",offset:3,city:"Istanbul"},{label:"RUH",offset:3,city:"Riyadh"},
+  {label:"UTC",offset:0,iana:"UTC",city:"Universal"},{label:"LON",iana:"Europe/London",offset:0,iana:"Europe/London",city:"London"},
+  {label:"DUB",iana:"Europe/Dublin",offset:1,city:"Dublin"},{label:"LIS",iana:"Europe/Lisbon",offset:0,city:"Lisbon"},
+  {label:"MAD",iana:"Europe/Madrid",offset:1,city:"Madrid"},{label:"PAR",iana:"Europe/Paris",offset:1,city:"Paris"},
+  {label:"BER",iana:"Europe/Berlin",offset:1,city:"Berlin"},{label:"ROM",iana:"Europe/Rome",offset:1,city:"Rome"},
+  {label:"AMS",iana:"Europe/Amsterdam",offset:1,city:"Amsterdam"},{label:"BCN",offset:1,city:"Barcelona"},
+  {label:"VIE",iana:"Europe/Vienna",offset:1,city:"Vienna"},{label:"ZRH",iana:"Europe/Zurich",offset:1,city:"Zurich"},
+  {label:"BRU",iana:"Europe/Brussels",offset:1,city:"Brussels"},{label:"WAW",iana:"Europe/Warsaw",offset:1,city:"Warsaw"},
+  {label:"BUD",iana:"Europe/Budapest",offset:1,city:"Budapest"},{label:"PRG",iana:"Europe/Prague",offset:1,city:"Prague"},
+  {label:"STO",iana:"Europe/Stockholm",offset:1,city:"Stockholm"},{label:"OSL",iana:"Europe/Oslo",offset:1,city:"Oslo"},
+  {label:"CPH",iana:"Europe/Copenhagen",offset:1,city:"Copenhagen"},{label:"HEL",iana:"Europe/Helsinki",offset:2,city:"Helsinki"},
+  {label:"RIG",offset:2,city:"Riga"},{label:"ATH",iana:"Europe/Athens",offset:2,city:"Athens"},
+  {label:"CAI",iana:"Africa/Cairo",offset:2,city:"Cairo"},{label:"JRS",offset:2,city:"Jerusalem"},
+  {label:"JNB",iana:"Africa/Johannesburg",offset:2,city:"Johannesburg"},{label:"MOS",iana:"Europe/Moscow",offset:3,city:"Moscow"},
+  {label:"IST",iana:"Europe/Istanbul",offset:3,city:"Istanbul"},{label:"RUH",offset:3,city:"Riyadh"},
   {label:"KWI",offset:3,city:"Kuwait City"},{label:"NBO",offset:3,city:"Nairobi"},
-  {label:"DXB",offset:4,city:"Dubai"},{label:"ABU",offset:4,city:"Abu Dhabi"},
+  {label:"DXB",iana:"Asia/Dubai",offset:4,city:"Dubai"},{label:"ABU",offset:4,city:"Abu Dhabi"},
   {label:"BAK",offset:4,city:"Baku"},{label:"TBS",offset:4,city:"Tbilisi"},
-  {label:"KBL",offset:4.5,city:"Kabul"},{label:"KHI",offset:5,city:"Karachi"},
-  {label:"DEL",offset:5.5,city:"New Delhi"},{label:"BOM",offset:5.5,city:"Mumbai"},
+  {label:"KBL",offset:4.5,city:"Kabul"},{label:"KHI",iana:"Asia/Karachi",offset:5,city:"Karachi"},
+  {label:"DEL",iana:"Asia/Kolkata",offset:5.5,city:"New Delhi"},{label:"BOM",iana:"Asia/Kolkata",offset:5.5,city:"Mumbai"},
   {label:"COL",offset:5.5,city:"Colombo"},{label:"KTM",offset:5.75,city:"Kathmandu"},
-  {label:"DAC",offset:6,city:"Dhaka"},{label:"ALM",offset:6,city:"Almaty"},
-  {label:"RGN",offset:6.5,city:"Yangon"},{label:"BKK",offset:7,city:"Bangkok"},
-  {label:"JKT",offset:7,city:"Jakarta"},{label:"HAN",offset:7,city:"Hanoi"},
-  {label:"SIN",offset:8,city:"Singapore"},{label:"KUL",offset:8,city:"Kuala Lumpur"},
-  {label:"HKG",offset:8,city:"Hong Kong"},{label:"BJS",offset:8,city:"Beijing"},
+  {label:"DAC",iana:"Asia/Dhaka",offset:6,city:"Dhaka"},{label:"ALM",offset:6,city:"Almaty"},
+  {label:"RGN",offset:6.5,city:"Yangon"},{label:"BKK",iana:"Asia/Bangkok",offset:7,city:"Bangkok"},
+  {label:"JKT",iana:"Asia/Jakarta",offset:7,city:"Jakarta"},{label:"HAN",offset:7,city:"Hanoi"},
+  {label:"SIN",iana:"Asia/Singapore",offset:8,city:"Singapore"},{label:"KUL",offset:8,city:"Kuala Lumpur"},
+  {label:"HKG",iana:"Asia/Hong_Kong",offset:8,city:"Hong Kong"},{label:"BJS",iana:"Asia/Shanghai",offset:8,city:"Beijing"},
   {label:"SHA",offset:8,city:"Shanghai"},{label:"TPE",offset:8,city:"Taipei"},
   {label:"MNL",offset:8,city:"Manila"},{label:"PER",offset:8,city:"Perth"},
-  {label:"SEL",offset:9,city:"Seoul"},{label:"TYO",offset:9,city:"Tokyo"},
-  {label:"ADL",offset:9.5,city:"Adelaide"},{label:"SYD",offset:10,city:"Sydney"},
-  {label:"MEL",offset:10,city:"Melbourne"},{label:"AKL",offset:12,city:"Auckland"},
-  {label:"NYC",offset:-5,city:"New York"},{label:"MIA",offset:-5,city:"Miami"},
-  {label:"BOS",offset:-5,city:"Boston"},{label:"ATL",offset:-5,city:"Atlanta"},
-  {label:"TOR",offset:-5,city:"Toronto"},{label:"CHI",offset:-6,city:"Chicago"},
-  {label:"DAL",offset:-6,city:"Dallas"},{label:"HOU",offset:-6,city:"Houston"},
-  {label:"MEX",offset:-6,city:"Mexico City"},{label:"DEN",offset:-7,city:"Denver"},
-  {label:"PHX",offset:-7,city:"Phoenix"},{label:"LAX",offset:-8,city:"Los Angeles"},
-  {label:"SFO",offset:-8,city:"San Francisco"},{label:"SEA",offset:-8,city:"Seattle"},
-  {label:"ANC",offset:-9,city:"Anchorage"},{label:"HNL",offset:-10,city:"Honolulu"},
-  {label:"SAO",offset:-3,city:"Sao Paulo"},{label:"BUE",offset:-3,city:"Buenos Aires"},
-  {label:"SCL",offset:-4,city:"Santiago"},{label:"BOG",offset:-5,city:"Bogota"},
-  {label:"LIM",offset:-5,city:"Lima"},
+  {label:"SEL",iana:"Asia/Seoul",offset:9,city:"Seoul"},{label:"TYO",iana:"Asia/Tokyo",offset:9,city:"Tokyo"},
+  {label:"ADL",offset:9.5,city:"Adelaide"},{label:"SYD",iana:"Australia/Sydney",offset:10,city:"Sydney"},
+  {label:"MEL",iana:"Australia/Melbourne",offset:10,city:"Melbourne"},{label:"AKL",iana:"Pacific/Auckland",offset:12,city:"Auckland"},
+  {label:"NYC",iana:"America/New_York",offset:-5,city:"New York"},{label:"MIA",iana:"America/New_York",offset:-5,city:"Miami"},
+  {label:"BOS",iana:"America/New_York",offset:-5,city:"Boston"},{label:"ATL",iana:"America/New_York",offset:-5,city:"Atlanta"},
+  {label:"TOR",iana:"America/Toronto",offset:-5,city:"Toronto"},{label:"CHI",iana:"America/Chicago",offset:-6,city:"Chicago"},
+  {label:"DAL",iana:"America/Chicago",offset:-6,city:"Dallas"},{label:"HOU",iana:"America/Chicago",offset:-6,city:"Houston"},
+  {label:"MEX",iana:"America/Mexico_City",offset:-6,city:"Mexico City"},{label:"DEN",iana:"America/Denver",offset:-7,city:"Denver"},
+  {label:"PHX",iana:"America/Phoenix",offset:-7,city:"Phoenix"},{label:"LAX",iana:"America/Los_Angeles",offset:-8,city:"Los Angeles"},
+  {label:"SFO",iana:"America/Los_Angeles",offset:-8,city:"San Francisco"},{label:"SEA",iana:"America/Los_Angeles",offset:-8,city:"Seattle"},
+  {label:"ANC",iana:"America/Anchorage",offset:-9,city:"Anchorage"},{label:"HNL",iana:"Pacific/Honolulu",offset:-10,city:"Honolulu"},
+  {label:"SAO",iana:"America/Sao_Paulo",offset:-3,city:"Sao Paulo"},{label:"BUE",iana:"America/Argentina/Buenos_Aires",offset:-3,city:"Buenos Aires"},
+  {label:"SCL",iana:"America/Santiago",offset:-4,city:"Santiago"},{label:"BOG",iana:"America/Bogota",offset:-5,city:"Bogota"},
+  {label:"LIM",iana:"America/Lima",offset:-5,city:"Lima"},
 ];
 
 var state = {
@@ -396,17 +409,33 @@ function updatePreview() {
   });
   if(state.tz){
     var now=new Date();
-    // Get current UTC time in minutes
-    var utcH=now.getUTCHours();
-    var utcM=now.getUTCMinutes();
-    var utcTotal=utcH*60+utcM;
-    // Add tz offset in minutes
-    var offsetMins=Math.round(Number(state.tz.offset)*60);
-    var tzTotal=(utcTotal+offsetMins+1440)%1440;
-    var h=Math.floor(tzTotal/60);
-    var m=tzTotal%60;
-    var ampm=h<12?"AM":"PM";
-    document.getElementById("wTZ").textContent=state.tz.label+" "+(h%12||12)+":"+("0"+m).slice(-2)+" "+ampm;
+    var h,m;
+    // Use IANA timezone if available for DST-correct time
+    if(state.tz.iana && typeof Intl !== "undefined") {
+      try {
+        var parts = new Intl.DateTimeFormat("en-US",{
+          timeZone:state.tz.iana, hour:"numeric", minute:"numeric", hour12:true
+        }).formatToParts(now);
+        var hp=parts.find(function(p){return p.type==="hour";}),
+            mp=parts.find(function(p){return p.type==="minute";}),
+            dp=parts.find(function(p){return p.type==="dayPeriod";});
+        h=parseInt(hp.value,10); m=parseInt(mp.value,10);
+        var ampm=(dp&&dp.value)||( h<12?"AM":"PM");
+        if(ampm==="PM"&&h!==12) h+=12; if(ampm==="AM"&&h===12) h=0;
+        document.getElementById("wTZ").textContent=state.tz.label+" "+(h%12||12)+":"+("0"+m).slice(-2)+" "+ampm;
+      } catch(e) {
+        // fallback to static offset
+        var utcT=now.getUTCHours()*60+now.getUTCMinutes();
+        var tot=(utcT+Math.round(Number(state.tz.offset)*60)+1440)%1440;
+        h=Math.floor(tot/60); m=tot%60;
+        document.getElementById("wTZ").textContent=state.tz.label+" "+(h%12||12)+":"+("0"+m).slice(-2)+" "+(h<12?"AM":"PM");
+      }
+    } else {
+      var utcT=now.getUTCHours()*60+now.getUTCMinutes();
+      var tot=(utcT+Math.round(Number(state.tz.offset)*60)+1440)%1440;
+      h=Math.floor(tot/60); m=tot%60;
+      document.getElementById("wTZ").textContent=state.tz.label+" "+(h%12||12)+":"+("0"+m).slice(-2)+" "+(h<12?"AM":"PM");
+    }
   }
   var n=new Date(),h2=n.getHours()%12||12;
   document.getElementById("wTime").textContent=("0"+h2).slice(-2)+":"+("0"+n.getMinutes()).slice(-2);
@@ -452,12 +481,20 @@ function saveSettings() {
   var ink    = document.getElementById("cInk").value;
   var accent = document.getElementById("cAccent").value;
   var ghost  = calcGhost(accent, bg);
+  // Get DST-aware current offset for selected timezone
+  var tzForSave = state.tz;
+  if (state.tz && state.tz.iana) {
+    var liveOffset = getCurrentOffset(state.tz.iana);
+    if (liveOffset !== null) {
+      tzForSave = {label:state.tz.label, offset:liveOffset, iana:state.tz.iana, city:state.tz.city};
+    }
+  }
   var result = {
     bg:bg, ink:ink, accent:accent, ghost:ghost,
     bgRgb:hexToRgb(bg), inkRgb:hexToRgb(ink),
     accentRgb:hexToRgb(accent), ghostRgb:hexToRgb(ghost),
     lat:state.lat, lon:state.lon, cityName:state.cityName,
-    tz:state.tz,
+    tz:tzForSave,
   };
   // Always use pebblejs://close# — this is the correct Pebble webview close pattern
   document.location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(result));
