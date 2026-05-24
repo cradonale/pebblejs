@@ -3,244 +3,539 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Watchface Config</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background: #111;
-      color: #fff;
-      font-family: sans-serif;
-      padding: 18px;
+      background: #0e0e10;
+      color: #f0f0f2;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding: 0 0 40px;
     }
-    h2 { margin-top: 0; }
-    label {
-      display: block;
-      margin-top: 14px;
-      font-weight: bold;
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-bottom: 1px solid #2a2a3e;
+      padding: 28px 24px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
-    select, input, button {
-      width: 100%;
-      margin-top: 6px;
-      padding: 10px;
-      font-size: 16px;
-      box-sizing: border-box;
+    .header-icon {
+      width: 44px; height: 44px;
+      background: #6c63ff22;
+      border: 1px solid #6c63ff55;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: #9b93ff;
     }
-    button {
-      background: #fff;
-      color: #000;
-      border: none;
-      margin-top: 20px;
-      cursor: pointer;
+    .header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+    .header p  { font-size: 13px; color: #888; margin-top: 2px; }
+
+    /* Main */
+    .main { padding: 24px; display: flex; flex-direction: column; gap: 16px; max-width: 560px; margin: 0 auto; }
+
+    /* Section cards */
+    .section {
+      background: #18181c;
+      border: 1px solid #2c2c38;
+      border-radius: 16px;
+      overflow: hidden;
     }
-    button:active { background: #ddd; }
-    .hint {
-      margin-top: 10px;
-      color: #aaa;
-      font-size: 13px;
+    .section-header {
+      padding: 14px 18px 12px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid #2c2c38;
+    }
+    .section-header i { font-size: 17px; color: #9b93ff; }
+    .section-header span { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #aaa; }
+    .section-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* Row: label + control */
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .row label { font-size: 14px; color: #ccc; flex-shrink: 0; }
+    .row label small { display: block; font-size: 11px; color: #666; margin-top: 1px; }
+
+    /* Segmented toggle (24h) */
+    .toggle-group { display: flex; background: #111115; border: 1px solid #2c2c38; border-radius: 9px; overflow: hidden; }
+    .toggle-group input[type=radio] { display: none; }
+    .toggle-group label {
+      padding: 7px 18px; font-size: 13px; font-weight: 500; cursor: pointer;
+      color: #666; transition: all 0.15s; white-space: nowrap;
+    }
+    .toggle-group input[type=radio]:checked + label {
+      background: #6c63ff; color: #fff; border-radius: 7px;
+    }
+
+    /* Select */
+    select {
+      background: #111115; border: 1px solid #2c2c38; border-radius: 9px;
+      color: #f0f0f2; padding: 8px 32px 8px 12px; font-size: 14px;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      cursor: pointer; min-width: 150px;
+    }
+    select:focus { outline: none; border-color: #6c63ff; }
+
+    /* Number input */
+    input[type=number] {
+      background: #111115; border: 1px solid #2c2c38; border-radius: 9px;
+      color: #f0f0f2; padding: 8px 12px; font-size: 14px; width: 120px;
+      text-align: right;
+    }
+    input[type=number]:focus { outline: none; border-color: #6c63ff; }
+
+    /* Color + metric grid: 2 columns */
+    .metric-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .metric-cell {
+      background: #111115; border: 1px solid #2c2c38; border-radius: 12px;
+      padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+      position: relative;
+    }
+    .metric-cell .pos-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.6px;
+      text-transform: uppercase; color: #6c63ff;
+    }
+    .metric-cell select { min-width: unset; width: 100%; font-size: 13px; }
+    .color-row { display: flex; align-items: center; gap: 8px; }
+    .color-row span { font-size: 12px; color: #777; }
+
+    /* Color swatch + input */
+    .color-wrap {
+      position: relative; display: inline-flex; align-items: center;
+    }
+    input[type=color] {
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid #2c2c38;
+      cursor: pointer; padding: 2px; background: #111115;
+    }
+    .color-hex {
+      font-size: 12px; color: #888; font-family: monospace; margin-left: 6px;
+    }
+
+    /* Watch preview */
+    .preview-wrap {
+      display: flex; justify-content: center; align-items: center;
+      padding: 20px 0 4px;
+    }
+    .watch-face {
+      width: 200px; height: 200px;
+      background: #000;
+      position: relative; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 4px;
+      overflow: hidden;
+    }
+    /* Edge color bars — L-shaped corners (horizontal + vertical leg) */
+    .edge-bar-h, .edge-bar-v {
+      position: absolute;
+      transition: background 0.2s;
+    }
+    /* Horizontal legs */
+    .edge-tl-h { top: 0;    left: 0;   width: 44%;  height: 4px; }
+    .edge-tr-h { top: 0;    right: 0;  width: 44%;  height: 4px; }
+    .edge-bl-h { bottom: 0; left: 0;   width: 44%;  height: 4px; }
+    .edge-br-h { bottom: 0; right: 0;  width: 44%;  height: 4px; }
+    /* Vertical legs */
+    .edge-tl-v { top: 0;    left: 0;   width: 4px;  height: 44%; }
+    .edge-tr-v { top: 0;    right: 0;  width: 4px;  height: 44%; }
+    .edge-bl-v { bottom: 0; left: 0;   width: 4px;  height: 44%; }
+    .edge-br-v { bottom: 0; right: 0;  width: 4px;  height: 44%; }
+
+    .watch-time {
+      font-size: 42px; font-weight: 700; letter-spacing: -1.5px; color: #fff;
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .watch-date {
+      font-size: 12px; color: #888; letter-spacing: 0.3px;
+    }
+
+    /* Corner stat blocks */
+    .wc { position: absolute; display: flex; flex-direction: column; gap: 1px; }
+    #wc-tl { top: 12px; left: 12px; align-items: flex-start; }
+    #wc-tr { top: 12px; right: 12px; align-items: flex-end; }
+    #wc-bl { bottom: 12px; left: 12px; align-items: flex-start; }
+    #wc-br { bottom: 12px; right: 12px; align-items: flex-end; }
+
+    .wc-value { font-size: 15px; font-weight: 700; color: #fff; line-height: 1; }
+    .wc-label { font-size: 9px; font-weight: 600; letter-spacing: 0.8px; color: #666; text-transform: uppercase; }
+
+    /* Divider */
+    .divider { border: none; border-top: 1px solid #2c2c38; margin: 2px 0; }
+
+    /* Save button */
+    .save-btn {
+      background: #6c63ff; color: #fff; border: none;
+      border-radius: 12px; padding: 15px; font-size: 16px; font-weight: 600;
+      cursor: pointer; width: 100%; display: flex; align-items: center;
+      justify-content: center; gap: 8px; transition: background 0.15s, transform 0.1s;
+      letter-spacing: 0.2px;
+    }
+    .save-btn:hover  { background: #7b73ff; }
+    .save-btn:active { transform: scale(0.98); background: #5a52e0; }
+
+    /* Gabbro hint */
+    #layout_hint { font-size: 12px; color: #666; text-align: center; padding-top: 4px; }
+
+    @media (max-width: 400px) {
+      .metric-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <h2>Watchface Settings</h2>
 
-  <label>Time Format</label>
-  <select id="use_24h">
-    <option value="1">24 Hour</option>
-    <option value="0">12 Hour</option>
-  </select>
+<div class="header">
+  <div class="header-icon"><i class="ti ti-device-watch"></i></div>
+  <div>
+    <h1>Watchface Settings</h1>
+    <p>Customize your watch display</p>
+  </div>
+</div>
 
-  <label id="tl_metric_label">Top Left</label>
-  <select id="tl_metric">
-    <option value="4">Off</option>
-    <option value="0">Battery</option>
-    <option value="1">Day</option>
-    <option value="2">Bluetooth</option>
-    <option value="3">Steps</option>
-    <option value="5">Calendar Week</option>
-    <option value="6">Calendar Day</option>
-    <option value="7">Distance</option>
-    <option value="8">Active Time</option>
-    <option value="9" class="hr-option">Heart Rate</option>
-  </select>
+<div class="main">
 
-  <label id="tr_metric_label">Top Right</label>
-  <select id="tr_metric">
-    <option value="4">Off</option>
-    <option value="0">Battery</option>
-    <option value="1">Day</option>
-    <option value="2">Bluetooth</option>
-    <option value="3">Steps</option>
-    <option value="5">Calendar Week</option>
-    <option value="6">Calendar Day</option>
-    <option value="7">Distance</option>
-    <option value="8">Active Time</option>
-    <option value="9" class="hr-option">Heart Rate</option>
-  </select>
+  <!-- Watch preview -->
+  <div class="section">
+    <div class="section-header">
+      <i class="ti ti-eye"></i><span>Preview</span>
+    </div>
+    <div class="preview-wrap">
+      <div class="watch-face">
+        <div class="edge-bar-h edge-tl-h" id="edge-tl-h"></div>
+        <div class="edge-bar-v edge-tl-v" id="edge-tl-v"></div>
+        <div class="edge-bar-h edge-tr-h" id="edge-tr-h"></div>
+        <div class="edge-bar-v edge-tr-v" id="edge-tr-v"></div>
+        <div class="edge-bar-h edge-bl-h" id="edge-bl-h"></div>
+        <div class="edge-bar-v edge-bl-v" id="edge-bl-v"></div>
+        <div class="edge-bar-h edge-br-h" id="edge-br-h"></div>
+        <div class="edge-bar-v edge-br-v" id="edge-br-v"></div>
 
-  <label id="bl_metric_label">Bottom Left</label>
-  <select id="bl_metric">
-    <option value="4">Off</option>
-    <option value="0">Battery</option>
-    <option value="1">Day</option>
-    <option value="2">Bluetooth</option>
-    <option value="3">Steps</option>
-    <option value="5">Calendar Week</option>
-    <option value="6">Calendar Day</option>
-    <option value="7">Distance</option>
-    <option value="8">Active Time</option>
-    <option value="9" class="hr-option">Heart Rate</option>
-  </select>
+        <div class="wc" id="wc-tl">
+          <div class="wc-value" id="wc-tl-val">54%</div>
+          <div class="wc-label" id="wc-tl-lbl">BATT</div>
+        </div>
+        <div class="wc" id="wc-tr">
+          <div class="wc-value" id="wc-tr-val">--</div>
+          <div class="wc-label" id="wc-tr-lbl">HR</div>
+        </div>
+        <div class="wc" id="wc-bl">
+          <div class="wc-value" id="wc-bl-val">ON</div>
+          <div class="wc-label" id="wc-bl-lbl">BT</div>
+        </div>
+        <div class="wc" id="wc-br">
+          <div class="wc-value" id="wc-br-val">0</div>
+          <div class="wc-label" id="wc-br-lbl">STEPS</div>
+        </div>
 
-  <label id="br_metric_label">Bottom Right</label>
-  <select id="br_metric">
-    <option value="4">Off</option>
-    <option value="0">Battery</option>
-    <option value="1">Day</option>
-    <option value="2">Bluetooth</option>
-    <option value="3">Steps</option>
-    <option value="5">Calendar Week</option>
-    <option value="6">Calendar Day</option>
-    <option value="7">Distance</option>
-    <option value="8">Active Time</option>
-    <option value="9" class="hr-option">Heart Rate</option>
-  </select>
+        <div class="watch-time" id="preview-time">10:58</div>
+        <div class="watch-date" id="preview-date">Sun, May 24</div>
+      </div>
+    </div>
+    <div id="layout_hint" style="padding-bottom:14px"></div>
+  </div>
 
-  <label>Steps Goal</label>
-  <input id="steps_goal" type="number" min="1000" step="500">
+  <!-- Time format -->
+  <div class="section">
+    <div class="section-header">
+      <i class="ti ti-clock"></i><span>Time Format</span>
+    </div>
+    <div class="section-body" style="padding: 14px 18px;">
+      <div class="row">
+        <label>Clock mode</label>
+        <div class="toggle-group">
+          <input type="radio" name="use_24h" id="fmt24" value="1">
+          <label for="fmt24">24 hr</label>
+          <input type="radio" name="use_24h" id="fmt12" value="0">
+          <label for="fmt12">12 hr</label>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <label>Distance Goal (meters)</label>
-  <input id="distance_goal" type="number" min="100" step="100">
+  <!-- Corner metrics + colors -->
+  <div class="section">
+    <div class="section-header">
+      <i class="ti ti-layout-grid"></i><span id="corners-label">Corner Metrics</span>
+    </div>
+    <div class="section-body">
+      <div class="metric-grid">
+        <div class="metric-cell">
+          <div class="pos-label" id="tl_metric_label">Top Left</div>
+          <select id="tl_metric" onchange="updatePreview()">
+            <option value="4">Off</option>
+            <option value="0">Battery</option>
+            <option value="1">Day</option>
+            <option value="2">Bluetooth</option>
+            <option value="3">Steps</option>
+            <option value="5">Cal. Week</option>
+            <option value="6">Cal. Day</option>
+            <option value="7">Distance</option>
+            <option value="8">Active Time</option>
+            <option value="9" class="hr-option">Heart Rate</option>
+          </select>
+          <div class="color-row">
+            <input type="color" id="tl_color" value="#ff0000" onchange="updatePreview()">
+            <span class="color-hex" id="tl_hex">#ff0000</span>
+          </div>
+        </div>
+        <div class="metric-cell">
+          <div class="pos-label" id="tr_metric_label">Top Right</div>
+          <select id="tr_metric" onchange="updatePreview()">
+            <option value="4">Off</option>
+            <option value="0">Battery</option>
+            <option value="1">Day</option>
+            <option value="2">Bluetooth</option>
+            <option value="3">Steps</option>
+            <option value="5">Cal. Week</option>
+            <option value="6">Cal. Day</option>
+            <option value="7">Distance</option>
+            <option value="8">Active Time</option>
+            <option value="9" class="hr-option">Heart Rate</option>
+          </select>
+          <div class="color-row">
+            <input type="color" id="tr_color" value="#0000ff" onchange="updatePreview()">
+            <span class="color-hex" id="tr_hex">#0000ff</span>
+          </div>
+        </div>
+        <div class="metric-cell">
+          <div class="pos-label" id="bl_metric_label">Bottom Left</div>
+          <select id="bl_metric" onchange="updatePreview()">
+            <option value="4">Off</option>
+            <option value="0">Battery</option>
+            <option value="1">Day</option>
+            <option value="2">Bluetooth</option>
+            <option value="3">Steps</option>
+            <option value="5">Cal. Week</option>
+            <option value="6">Cal. Day</option>
+            <option value="7">Distance</option>
+            <option value="8">Active Time</option>
+            <option value="9" class="hr-option">Heart Rate</option>
+          </select>
+          <div class="color-row">
+            <input type="color" id="bl_color" value="#ffcc00" onchange="updatePreview()">
+            <span class="color-hex" id="bl_hex">#ffcc00</span>
+          </div>
+        </div>
+        <div class="metric-cell">
+          <div class="pos-label" id="br_metric_label">Bottom Right</div>
+          <select id="br_metric" onchange="updatePreview()">
+            <option value="4">Off</option>
+            <option value="0">Battery</option>
+            <option value="1">Day</option>
+            <option value="2">Bluetooth</option>
+            <option value="3">Steps</option>
+            <option value="5">Cal. Week</option>
+            <option value="6">Cal. Day</option>
+            <option value="7">Distance</option>
+            <option value="8">Active Time</option>
+            <option value="9" class="hr-option">Heart Rate</option>
+          </select>
+          <div class="color-row">
+            <input type="color" id="br_color" value="#00ff00" onchange="updatePreview()">
+            <span class="color-hex" id="br_hex">#00ff00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <label>Active Time Goal (seconds)</label>
-  <input id="active_time_goal" type="number" min="60" step="60">
+  <!-- Goals -->
+  <div class="section">
+    <div class="section-header">
+      <i class="ti ti-target"></i><span>Daily Goals</span>
+    </div>
+    <div class="section-body">
+      <div class="row">
+        <label>Steps<small>Default 8,000</small></label>
+        <input id="steps_goal" type="number" min="1000" step="500" value="8000">
+      </div>
+      <hr class="divider">
+      <div class="row">
+        <label>Distance<small>meters</small></label>
+        <input id="distance_goal" type="number" min="100" step="100" value="5000">
+      </div>
+      <hr class="divider">
+      <div class="row">
+        <label>Active Time<small>seconds</small></label>
+        <input id="active_time_goal" type="number" min="60" step="60" value="1800">
+      </div>
+    </div>
+  </div>
 
-  <label>Seconds Animation</label>
-  <select id="seconds_animation_mode">
-    <option value="0">Show Ring + Animate 5s</option>
-    <option value="1">Hide Ring + Animate 5s</option>
-    <option value="2">Show Ring + Animate 10s</option>
-    <option value="3">Hide Ring + Animate 10s</option>
-    <option value="4">Show Ring + Always Animate</option>
-    <option value="5">Hide Ring + Always Animate</option>
-  </select>
+  <!-- Seconds animation -->
+  <div class="section">
+    <div class="section-header">
+      <i class="ti ti-rotate-clockwise"></i><span>Seconds Animation</span>
+    </div>
+    <div class="section-body" style="padding: 14px 18px;">
+      <select id="seconds_animation_mode" style="width:100%">
+        <option value="0">Show Ring · Animate 5s</option>
+        <option value="1">Hide Ring · Animate 5s</option>
+        <option value="2">Show Ring · Animate 10s</option>
+        <option value="3">Hide Ring · Animate 10s</option>
+        <option value="4">Show Ring · Always Animate</option>
+        <option value="5">Hide Ring · Always Animate</option>
+      </select>
+    </div>
+  </div>
 
-  <label id="tl_color_label">Top Left Color</label>
-  <input id="tl_color" type="color" value="#ff0000">
+  <!-- Save -->
+  <button class="save-btn" onclick="saveSettings()">
+    <i class="ti ti-device-floppy"></i> Save to Watch
+  </button>
 
-  <label id="tr_color_label">Top Right Color</label>
-  <input id="tr_color" type="color" value="#0000ff">
+</div>
 
-  <label id="bl_color_label">Bottom Left Color</label>
-  <input id="bl_color" type="color" value="#ffcc00">
+<script>
+  /* ── URL param helpers ──────────────────────────── */
+  function getQueryParam(name) {
+    var q = window.location.search.substring(1).split('&');
+    for (var i = 0; i < q.length; i++) {
+      var p = q[i].split('=');
+      if (decodeURIComponent(p[0]) === name) return decodeURIComponent(p[1] || '');
+    }
+    return null;
+  }
+  function toHexColor(value, fallback) {
+    var n = parseInt(value, 10);
+    if (isNaN(n)) n = fallback;
+    var h = n.toString(16);
+    while (h.length < 6) h = '0' + h;
+    return '#' + h;
+  }
 
-  <label id="br_color_label">Bottom Right Color</label>
-  <input id="br_color" type="color" value="#00ff00">
+  /* ── Layout detection ────────────────────────────── */
+  function isGabbroLayout() {
+    return (getQueryParam('platform') || '').toLowerCase() === 'gabbro';
+  }
+  function applyLayoutLabels() {
+    if (!isGabbroLayout()) return;
+    document.getElementById('tl_metric_label').textContent = 'Top';
+    document.getElementById('tr_metric_label').textContent = 'Right';
+    document.getElementById('bl_metric_label').textContent = 'Left';
+    document.getElementById('br_metric_label').textContent = 'Bottom';
+    document.getElementById('corners-label').textContent   = 'Side Metrics';
+    document.getElementById('layout_hint').textContent     = 'Round watch: Top · Right · Left · Bottom';
+  }
+  function disableHeartRateForGabbro() {
+    if (!isGabbroLayout()) return;
+    document.querySelectorAll('.hr-option').forEach(function(o) { o.style.display = 'none'; });
+    ['tl_metric','tr_metric','bl_metric','br_metric'].forEach(function(id) {
+      var s = document.getElementById(id);
+      if (s.value === '9') s.value = '4';
+    });
+  }
 
-  <div class="hint" id="layout_hint"></div>
+  /* ── Set initial values ──────────────────────────── */
+  function setInitialValues() {
+    var f24 = getQueryParam('use_24h') || '1';
+    document.getElementById(f24 === '1' ? 'fmt24' : 'fmt12').checked = true;
 
-  <button onclick="saveSettings()">Save Settings</button>
+    document.getElementById('tl_metric').value            = getQueryParam('tl_metric')            || '0';
+    document.getElementById('tr_metric').value            = getQueryParam('tr_metric')            || '1';
+    document.getElementById('bl_metric').value            = getQueryParam('bl_metric')            || '2';
+    document.getElementById('br_metric').value            = getQueryParam('br_metric')            || '3';
+    document.getElementById('steps_goal').value           = getQueryParam('steps_goal')           || '8000';
+    document.getElementById('distance_goal').value        = getQueryParam('distance_goal')        || '5000';
+    document.getElementById('active_time_goal').value     = getQueryParam('active_time_goal')     || '1800';
+    document.getElementById('seconds_animation_mode').value = getQueryParam('seconds_animation_mode') || '0';
 
-  <script>
-    /* ── URL param helpers ─────────────────────────────────────────────── */
+    var colors = {
+      tl: toHexColor(getQueryParam('tl_color'), 0xFF0000),
+      tr: toHexColor(getQueryParam('tr_color'), 0x0000FF),
+      bl: toHexColor(getQueryParam('bl_color'), 0xFFCC00),
+      br: toHexColor(getQueryParam('br_color'), 0x00FF00)
+    };
+    ['tl','tr','bl','br'].forEach(function(k) {
+      document.getElementById(k+'_color').value = colors[k];
+      document.getElementById(k+'_hex').textContent = colors[k];
+    });
+  }
 
-    function getQueryParam(name) {
-      var query = window.location.search.substring(1);
-      var vars = query.split('&');
-      for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split('=');
-        if (decodeURIComponent(pair[0]) === name) {
-          return decodeURIComponent(pair[1] || '');
-        }
+  /* ── Live preview ────────────────────────────────── */
+  var METRIC_VALS  = { '4':['—',''],    '0':['54%','BATT'], '1':['MON','DAY'],  '2':['ON','BT'],
+                       '3':['0','STEPS'],'5':['21','WEEK'], '6':['24','CAL'],   '7':['3.2','KM'],
+                       '8':['32m','ACT'],'9':['--','HR'] };
+
+  function updatePreview() {
+    ['tl','tr','bl','br'].forEach(function(k) {
+      var sel = document.getElementById(k+'_metric');
+      var col = document.getElementById(k+'_color').value;
+      document.getElementById(k+'_hex').textContent = col;
+
+      var info = METRIC_VALS[sel.value] || ['—',''];
+      var valEl = document.getElementById('wc-'+k+'-val');
+      var lblEl = document.getElementById('wc-'+k+'-lbl');
+
+      if (sel.value === '4') {
+        document.getElementById('edge-'+k+'-h').style.background = 'transparent';
+        document.getElementById('edge-'+k+'-v').style.background = 'transparent';
+        valEl.style.display = 'none';
+        lblEl.style.display = 'none';
+      } else {
+        document.getElementById('edge-'+k+'-h').style.background = col;
+        document.getElementById('edge-'+k+'-v').style.background = col;
+        valEl.style.display = '';
+        lblEl.style.display = '';
+        valEl.style.color = col;
+        valEl.textContent = info[0];
+        lblEl.textContent = info[1];
       }
-      return null;
+    });
+
+    var is24 = document.querySelector('input[name=use_24h]:checked');
+    var now = new Date();
+    var h = now.getHours(), m = now.getMinutes();
+    var mStr = (m < 10 ? '0' : '') + m;
+    var timeStr;
+    if (is24 && is24.value === '0') {
+      var ampm = h >= 12 ? 'PM' : 'AM';
+      timeStr = (h % 12 || 12) + ':' + mStr + ' ' + ampm;
+    } else {
+      timeStr = (h < 10 ? '0' : '') + h + ':' + mStr;
     }
+    document.getElementById('preview-time').textContent = timeStr;
 
-    function toHexColor(value, fallback) {
-      var n = parseInt(value, 10);
-      if (isNaN(n)) { n = fallback; }
-      var hex = n.toString(16);
-      while (hex.length < 6) { hex = '0' + hex; }
-      return '#' + hex;
-    }
+    var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    document.getElementById('preview-date').textContent =
+      days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate();
+  }
 
-    /* ── Layout detection ──────────────────────────────────────────────── */
+  /* ── Save ────────────────────────────────────────── */
+  function saveSettings() {
+    var use24 = document.querySelector('input[name=use_24h]:checked');
+    var configData = {
+      tl_metric:              parseInt(document.getElementById('tl_metric').value,              10),
+      tr_metric:              parseInt(document.getElementById('tr_metric').value,              10),
+      bl_metric:              parseInt(document.getElementById('bl_metric').value,              10),
+      br_metric:              parseInt(document.getElementById('br_metric').value,              10),
+      tl_color:               parseInt(document.getElementById('tl_color').value.substring(1), 16),
+      tr_color:               parseInt(document.getElementById('tr_color').value.substring(1), 16),
+      bl_color:               parseInt(document.getElementById('bl_color').value.substring(1), 16),
+      br_color:               parseInt(document.getElementById('br_color').value.substring(1), 16),
+      use_24h:                parseInt(use24 ? use24.value : '1',                               10),
+      steps_goal:             parseInt(document.getElementById('steps_goal').value,             10),
+      distance_goal:          parseInt(document.getElementById('distance_goal').value,          10),
+      active_time_goal:       parseInt(document.getElementById('active_time_goal').value,       10),
+      seconds_animation_mode: parseInt(document.getElementById('seconds_animation_mode').value, 10)
+    };
+    document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(configData));
+  }
 
-    function isGabbroLayout() {
-      var platform = (getQueryParam('platform') || '').toLowerCase();
-      return platform === 'gabbro';
-    }
+  /* ── Boot ────────────────────────────────────────── */
+  applyLayoutLabels();
+  setInitialValues();
+  disableHeartRateForGabbro();
+  updatePreview();
 
-    function applyLayoutLabels() {
-      if (!isGabbroLayout()) { return; }
-      document.getElementById('tl_metric_label').textContent = 'Top';
-      document.getElementById('tr_metric_label').textContent = 'Right';
-      document.getElementById('bl_metric_label').textContent = 'Left';
-      document.getElementById('br_metric_label').textContent = 'Bottom';
-      document.getElementById('tl_color_label').textContent  = 'Top Color';
-      document.getElementById('tr_color_label').textContent  = 'Right Color';
-      document.getElementById('bl_color_label').textContent  = 'Left Color';
-      document.getElementById('br_color_label').textContent  = 'Bottom Color';
-      document.getElementById('layout_hint').textContent =
-        'Round watch layout: Top, Right, Left, Bottom';
-    }
-
-    function disableHeartRateForGabbro() {
-      if (!isGabbroLayout()) { return; }
-      var hrOptions = document.querySelectorAll('.hr-option');
-      for (var i = 0; i < hrOptions.length; i++) {
-        hrOptions[i].style.display = 'none';
-      }
-      ['tl_metric', 'tr_metric', 'bl_metric', 'br_metric'].forEach(function(id) {
-        var select = document.getElementById(id);
-        if (select.value === '9') { select.value = '4'; }
-      });
-    }
-
-    /* ── Populate from current watch values passed as query params ─────── */
-
-    function setInitialValues() {
-      document.getElementById('use_24h').value               = getQueryParam('use_24h')               || '1';
-      document.getElementById('tl_metric').value             = getQueryParam('tl_metric')             || '0';
-      document.getElementById('tr_metric').value             = getQueryParam('tr_metric')             || '1';
-      document.getElementById('bl_metric').value             = getQueryParam('bl_metric')             || '2';
-      document.getElementById('br_metric').value             = getQueryParam('br_metric')             || '3';
-      document.getElementById('steps_goal').value            = getQueryParam('steps_goal')            || '8000';
-      document.getElementById('distance_goal').value         = getQueryParam('distance_goal')         || '5000';
-      document.getElementById('active_time_goal').value      = getQueryParam('active_time_goal')      || '1800';
-      document.getElementById('seconds_animation_mode').value= getQueryParam('seconds_animation_mode')|| '0';
-      document.getElementById('tl_color').value = toHexColor(getQueryParam('tl_color'), 0xFF0000);
-      document.getElementById('tr_color').value = toHexColor(getQueryParam('tr_color'), 0x0000FF);
-      document.getElementById('bl_color').value = toHexColor(getQueryParam('bl_color'), 0xFFCC00);
-      document.getElementById('br_color').value = toHexColor(getQueryParam('br_color'), 0x00FF00);
-    }
-
-    /* ── Save — closes the webview and returns data to pebble-js-app.js ── */
-
-    function saveSettings() {
-      var configData = {
-        tl_metric:              parseInt(document.getElementById('tl_metric').value,              10),
-        tr_metric:              parseInt(document.getElementById('tr_metric').value,              10),
-        bl_metric:              parseInt(document.getElementById('bl_metric').value,              10),
-        br_metric:              parseInt(document.getElementById('br_metric').value,              10),
-        tl_color:               parseInt(document.getElementById('tl_color').value.substring(1), 16),
-        tr_color:               parseInt(document.getElementById('tr_color').value.substring(1), 16),
-        bl_color:               parseInt(document.getElementById('bl_color').value.substring(1), 16),
-        br_color:               parseInt(document.getElementById('br_color').value.substring(1), 16),
-        use_24h:                parseInt(document.getElementById('use_24h').value,                10),
-        steps_goal:             parseInt(document.getElementById('steps_goal').value,             10),
-        distance_goal:          parseInt(document.getElementById('distance_goal').value,          10),
-        active_time_goal:       parseInt(document.getElementById('active_time_goal').value,       10),
-        seconds_animation_mode: parseInt(document.getElementById('seconds_animation_mode').value, 10)
-      };
-
-      // This closes the Pebble webview and passes the data back to
-      // pebble-js-app.js via the 'webviewclosed' event.
-      var encoded = encodeURIComponent(JSON.stringify(configData));
-      document.location = 'pebblejs://close#' + encoded;
-    }
-
-    /* ── Boot ──────────────────────────────────────────────────────────── */
-    applyLayoutLabels();
-    setInitialValues();
-    disableHeartRateForGabbro();
-  </script>
+  document.querySelectorAll('input[name=use_24h]').forEach(function(r) {
+    r.addEventListener('change', updatePreview);
+  });
+</script>
 </body>
 </html>
