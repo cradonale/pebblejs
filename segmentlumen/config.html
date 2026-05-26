@@ -514,12 +514,8 @@ function setLargeTime(large) {
   state.largeTime = large;
   document.getElementById("btnNormal").classList.toggle("active", !large);
   document.getElementById("btnLarge").classList.toggle("active",   large);
-  // Update preview — hide/show stat rows
-  document.getElementById("wRow1").style.display  = large ? "none" : "";
-  document.getElementById("wDiv1").style.display  = large ? "none" : "";
-  document.getElementById("wDiv2").style.display  = large ? "none" : "";
-  document.getElementById("wRow2").style.display  = large ? "none" : "";
-  document.getElementById("wTime").style.fontSize = large ? "60px" : "44px";
+  // Both stat rows always visible — just make time bigger
+  document.getElementById("wTime").style.fontSize = large ? "56px" : "44px";
 }
 
 function set24h(use24h) {
