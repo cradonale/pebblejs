@@ -63,7 +63,9 @@ input:focus{border-color:var(--accent,#76945c)}
 <div class="card">
 <h2>Built-in Themes</h2>
 <div class="themes" id="builtinThemes"></div>
-<h2 style="margin-top:12px">User Schemes</h2>
+<h2 style="margin-top:12px">My Saved Schemes</h2>
+<div class="themes" id="localSchemes"><span class="status">No saved schemes yet</span></div>
+<h2 style="margin-top:12px">Community Schemes</h2>
 <div class="themes" id="userSchemes"><span class="status">Loading...</span></div>
 </div>
 
@@ -75,11 +77,10 @@ input:focus{border-color:var(--accent,#76945c)}
   <div class="color-item"><label>Accent (bars)</label><input type="color" class="color-swatch" id="cAccent" value="#76945c"></div>
 </div>
 <div class="row">
-  <input type="text" id="schemeName" placeholder="Name your scheme to share...">
-  <button class="btn" onclick="publishScheme()">Share</button>
+  <input type="text" id="schemeName" placeholder="Name your color scheme...">
+  <button class="btn" onclick="saveScheme()">Save</button>
 </div>
-<div class="scheme-id-box" id="schemeIdBox"></div>
-<div class="status" id="publishStatus"></div>
+<div id="publishStatus" style="font-size:13px;margin-top:8px;min-height:20px;font-weight:600"></div>
 <div class="row" style="margin-top:8px">
   <input type="text" id="schemeIdInput" placeholder="Paste scheme ID to load...">
   <button class="btn-outline" onclick="loadSchemeById()">Load</button>
@@ -123,7 +124,12 @@ input:focus{border-color:var(--accent,#76945c)}
 
 <div class="card">
 <h2>2nd Time Zone</h2>
-<select id="tzSelect" style="width:100%;padding:10px;border:1.5px solid var(--site-border,#ddd);border-radius:10px;font-size:15px;background:var(--site-card,#fff);color:var(--site-ink,#222);outline:none;cursor:pointer"></select>
+<select id="tzSelect" style="width:100%;padding:10px;border:1.5px solid var(--site-border,#ddd);border-radius:10px;font-size:15px;background:var(--site-card,#fff);color:var(--site-ink,#222);outline:none;cursor:pointer;margin-bottom:10px"></select>
+<div style="display:flex;gap:8px;align-items:center">
+  <span style="font-size:13px;color:var(--site-muted,#888);flex:1">Time format</span>
+  <button id="tz2btn12" class="theme-btn active" onclick="setTz2_24h(false)" style="padding:6px 14px;border-radius:8px">12H</button>
+  <button id="tz2btn24" class="theme-btn"        onclick="setTz2_24h(true)"  style="padding:6px 14px;border-radius:8px">24H</button>
+</div>
 </div>
 
 <button class="save-btn" onclick="saveSettings()">Save to Watch</button>
@@ -210,6 +216,7 @@ var state = {
   useF: false,
   use24h:   false,
   timeSize: "normal",
+  tz2_24h: false,
   tz: TIMEZONES.find(function(t){return t.label==="NYC";})
 };
 
@@ -293,52 +300,78 @@ function loadUserSchemes() {
   });
 }
 
-function publishScheme() {
-  var name = document.getElementById("schemeName").value.trim();
-  if (!name) { alert("Enter a name for your scheme"); return; }
-  if (!JSONBIN_BIN || JSONBIN_BIN === "YOUR_MASTER_BIN_ID") {
-    document.getElementById("publishStatus").textContent = "Sharing not configured yet";
-    return;
-  }
-  var writeKey = getQueryParam("wk") || "";
-  if (!writeKey) {
-    document.getElementById("publishStatus").textContent = "Write access not available — open settings from Pebble app";
-    return;
-  }
-  var bg=document.getElementById("cBg").value;
-  var ink=document.getElementById("cInk").value;
-  var accent=document.getElementById("cAccent").value;
-  var status = document.getElementById("publishStatus");
-  status.textContent = "Sharing...";
+function setStatus(msg, color) {
+  var el = document.getElementById("publishStatus");
+  el.textContent = msg;
+  el.style.color = color || "var(--accent,#76945c)";
+}
 
-  // Read current schemes first
-  fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN + "/latest")
-  .then(function(r){return r.json();})
-  .then(function(data) {
-    var schemes = (data.record && data.record.schemes) || [];
-    var exists = schemes.find(function(s){return s.name.toLowerCase()===name.toLowerCase();});
-    if (exists) {
-      status.textContent = "A scheme named '"+name+"' already exists!";
-      return Promise.reject("duplicate");
-    }
-    var newScheme = {name:name, bg:bg, ink:ink, accent:accent, id:Date.now().toString(36)};
-    schemes.push(newScheme);
-    return fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN, {
-      method: "PUT",
-      headers: {"Content-Type":"application/json", "X-Master-Key": writeKey},
-      body: JSON.stringify({schemes:schemes})
-    });
-  })
-  .then(function(r){ if(r) return r.json(); })
-  .then(function(d) {
-    if (d) {
-      status.textContent = "✓ '"+name+"' shared with everyone!";
-      document.getElementById("schemeName").value = "";
-      loadUserSchemes();
-    }
-  })
-  .catch(function(e){
-    if (e !== "duplicate") status.textContent = "Failed to share — try again";
+function saveScheme() {
+  var name = document.getElementById("schemeName").value.trim();
+  if (!name) { setStatus("Enter a name for your scheme", "#c00"); return; }
+  var bg     = document.getElementById("cBg").value;
+  var ink    = document.getElementById("cInk").value;
+  var accent = document.getElementById("cAccent").value;
+  var newScheme = {name:name, bg:bg, ink:ink, accent:accent, id:Date.now().toString(36)};
+
+  // 1. Always save locally
+  var local = JSON.parse(localStorage.getItem("sl_local_schemes") || "[]");
+  var localExists = local.find(function(s){ return s.name.toLowerCase()===name.toLowerCase(); });
+  if (localExists) {
+    setStatus("A scheme named '"+name+"' already exists!", "#c00");
+    return;
+  }
+  local.push(newScheme);
+  localStorage.setItem("sl_local_schemes", JSON.stringify(local));
+  document.getElementById("schemeName").value = "";
+  setStatus("✓ '"+name+"' saved!");
+  renderLocalSchemes();
+
+  // 2. Also share globally if write key available
+  var writeKey = getQueryParam("wk") || "";
+  if (writeKey && JSONBIN_BIN && JSONBIN_BIN !== "YOUR_MASTER_BIN_ID") {
+    setStatus("✓ '"+name+"' saved! Sharing globally...");
+    fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN + "/latest")
+    .then(function(r){return r.json();})
+    .then(function(data) {
+      var schemes = (data.record && data.record.schemes) || [];
+      var exists = schemes.find(function(s){return s.name.toLowerCase()===name.toLowerCase();});
+      if (!exists) {
+        schemes.push(newScheme);
+        return fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN, {
+          method: "PUT",
+          headers: {"Content-Type":"application/json","X-Master-Key":writeKey},
+          body: JSON.stringify({schemes:schemes})
+        });
+      }
+    })
+    .then(function(r){ if(r && r.ok) { setStatus("✓ '"+name+"' saved and shared with everyone!"); loadUserSchemes(); } })
+    .catch(function(){ setStatus("✓ '"+name+"' saved locally (global share failed)"); });
+  }
+}
+
+// Local schemes (always available, no key needed)
+function renderLocalSchemes() {
+  var local = JSON.parse(localStorage.getItem("sl_local_schemes") || "[]");
+  var div = document.getElementById("localSchemes");
+  if (!div) return;
+  div.innerHTML = "";
+  if (!local.length) {
+    div.innerHTML = '<span class="status">No saved schemes yet</span>';
+    return;
+  }
+  local.forEach(function(s, i) {
+    var btn = makeSchemeBtn(s);
+    // Long-press or right-click to delete
+    btn.oncontextmenu = function(e) {
+      e.preventDefault();
+      if (confirm("Delete '"+s.name+"'?")) {
+        local.splice(i, 1);
+        localStorage.setItem("sl_local_schemes", JSON.stringify(local));
+        renderLocalSchemes();
+      }
+    };
+    div.appendChild(btn);
   });
 }
 
@@ -488,8 +521,10 @@ function loadSettings() {
   if (useF === "1") setTempUnit(true);
   var use24h = getQueryParam("use24h");
   if (use24h === "1") set24h(true);
-  var timeSize = getQueryParam("timeSize");
+  var timeSize  = getQueryParam("timeSize");
   if (timeSize) setTimeSize(timeSize);
+  var tz2_24h = getQueryParam("tz2_24h");
+  if (tz2_24h === "1") setTz2_24h(true);
 
   document.getElementById("cBg").value     = bg;
   document.getElementById("cInk").value    = ink;
@@ -506,11 +541,29 @@ function loadSettings() {
     if (found) { state.tz=found; }
   }
   buildTzDropdown(state.tz ? state.tz.label : null);
+  renderLocalSchemes();
   loadUserSchemes();
   updatePreview();
 }
 
 // ── Save to Pebble ────────────────────────────────────────────────────────
+function setTz2_24h(use24h) {
+  state.tz2_24h = use24h;
+  document.getElementById("tz2btn12").classList.toggle("active", !use24h);
+  document.getElementById("tz2btn24").classList.toggle("active",  use24h);
+  // Update preview TZ2
+  if (state.tz) {
+    var now = new Date();
+    var utc = now.getTime() + now.getTimezoneOffset()*60000;
+    var tz2 = new Date(utc + Number(state.tz.offset)*3600000);
+    var h = tz2.getHours(), m = tz2.getMinutes();
+    var str = use24h
+      ? state.tz.label + " " + ("0"+h).slice(-2) + ":" + ("0"+m).slice(-2)
+      : state.tz.label + " " + (h%12||12) + ":" + ("0"+m).slice(-2) + " " + (h<12?"AM":"PM");
+    document.getElementById("wTZ").textContent = str;
+  }
+}
+
 function setTimeSize(size) {
   state.timeSize = size;
   ["btnNormal","btnMedium","btnLarge"].forEach(function(id) {
@@ -559,6 +612,7 @@ function saveSettings() {
     useF:state.useF,
     use24h:state.use24h,
     timeSize:state.timeSize,
+    tz2_24h:state.tz2_24h,
     tz:tzForSave,
   };
   // Always use pebblejs://close# — this is the correct Pebble webview close pattern
