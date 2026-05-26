@@ -112,6 +112,15 @@ input:focus{border-color:var(--accent,#76945c)}
 </div>
 
 <div class="card">
+<h2>Large Time Mode</h2>
+<div style="display:flex;gap:10px">
+  <button id="btnNormal" class="theme-btn active" onclick="setLargeTime(false)" style="flex:1;border-radius:10px">Normal</button>
+  <button id="btnLarge"  class="theme-btn"        onclick="setLargeTime(true)"  style="flex:1;border-radius:10px">Large Time</button>
+</div>
+<p style="font-size:12px;color:var(--site-muted,#888);margin-top:8px">Large mode fills the screen with the time — ideal for visual accessibility</p>
+</div>
+
+<div class="card">
 <h2>2nd Time Zone</h2>
 <select id="tzSelect" style="width:100%;padding:10px;border:1.5px solid var(--site-border,#ddd);border-radius:10px;font-size:15px;background:var(--site-card,#fff);color:var(--site-ink,#222);outline:none;cursor:pointer"></select>
 </div>
@@ -198,7 +207,8 @@ var state = {
   bg:"#ffffff", ink:"#1c2e0f", accent:"#76945c",
   lat:32.81, lon:-96.95, cityName:"Irving, TX",
   useF: false,
-  use24h: false,
+  use24h:    false,
+  largeTime: false,
   tz: TIMEZONES.find(function(t){return t.label==="NYC";})
 };
 
@@ -477,6 +487,8 @@ function loadSettings() {
   if (useF === "1") setTempUnit(true);
   var use24h = getQueryParam("use24h");
   if (use24h === "1") set24h(true);
+  var largeTime = getQueryParam("largeTime");
+  if (largeTime === "1") setLargeTime(true);
 
   document.getElementById("cBg").value     = bg;
   document.getElementById("cInk").value    = ink;
@@ -498,6 +510,18 @@ function loadSettings() {
 }
 
 // ── Save to Pebble ────────────────────────────────────────────────────────
+function setLargeTime(large) {
+  state.largeTime = large;
+  document.getElementById("btnNormal").classList.toggle("active", !large);
+  document.getElementById("btnLarge").classList.toggle("active",   large);
+  // Update preview — hide/show stat rows
+  document.getElementById("wRow1").style.display  = large ? "none" : "";
+  document.getElementById("wDiv1").style.display  = large ? "none" : "";
+  document.getElementById("wDiv2").style.display  = large ? "none" : "";
+  document.getElementById("wRow2").style.display  = large ? "none" : "";
+  document.getElementById("wTime").style.fontSize = large ? "60px" : "44px";
+}
+
 function set24h(use24h) {
   state.use24h = use24h;
   document.getElementById("btn12h").classList.toggle("active", !use24h);
@@ -536,6 +560,7 @@ function saveSettings() {
     lat:state.lat, lon:state.lon, cityName:state.cityName,
     useF:state.useF,
     use24h:state.use24h,
+    largeTime:state.largeTime,
     tz:tzForSave,
   };
   // Always use pebblejs://close# — this is the correct Pebble webview close pattern
