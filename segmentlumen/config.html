@@ -21,6 +21,8 @@ h2{font-size:11px;color:var(--site-muted,#888);margin:16px 0 8px;text-transform:
 .themes{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
 .theme-btn{padding:8px 14px;border-radius:20px;border:2px solid #ddd;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .theme-btn.active{transform:scale(1.05);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+#btnC,#btnF,#btn12h,#btn24h,#btnNormal,#btnMedium,#btnLarge,#tz2btn12,#tz2btn24{background:transparent;color:var(--accent,#76945c);border-color:var(--accent,#76945c)}
+#btnC.active,#btnF.active,#btn12h.active,#btn24h.active,#btnNormal.active,#btnMedium.active,#btnLarge.active,#tz2btn12.active,#tz2btn24.active{background:var(--accent,#76945c);color:var(--site-card,#fff);border-color:var(--accent,#76945c)}
 .color-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .color-item label{font-size:12px;color:var(--site-muted,#666);margin-bottom:4px;display:block}
 .color-swatch{width:100%;height:40px;border-radius:8px;border:1px solid #ddd;cursor:pointer;padding:3px}
@@ -136,9 +138,9 @@ input:focus{border-color:var(--accent,#76945c)}
 
 <script>
 // ── jsonbin.io config ────────────────────────────────────────────────────
-// BIN_ID is public — safe to expose (read-only public bin)
-// Writing is done via index.js on the phone (key stays private there)
-var JSONBIN_BIN = "YOUR_MASTER_BIN_ID";
+// BIN_ID is public — safe to expose. The app also passes it as ?bin=...
+var JSONBIN_BIN = getQueryParam("bin") || "6a1232dfee5a733b120bd548";
+var JSONBIN_WRITE_KEY = getQueryParam("wk") || "$2a$10$Ht7tsgtZYIuIz7TFSZah6OBJpJTPN/fuEdMklR.LrF4CDjS/B/buW";
 
 // ── Themes ────────────────────────────────────────────────────────────────
 var BUILTIN_THEMES = {
@@ -249,6 +251,12 @@ function updateSiteTheme(bg, ink, accent) {
 }
 
 // ── Build built-in theme buttons ──────────────────────────────────────────
+function clearSchemeSelection() {
+  document.querySelectorAll("#builtinThemes .theme-btn, #localSchemes .theme-btn, #userSchemes .theme-btn").forEach(function(b){
+    b.classList.remove("active");
+  });
+}
+
 Object.keys(BUILTIN_THEMES).forEach(function(name) {
   var t = BUILTIN_THEMES[name];
   var btn = document.createElement("button");
@@ -257,13 +265,33 @@ Object.keys(BUILTIN_THEMES).forEach(function(name) {
   btn.style.background=t.bg; btn.style.color=t.ink; btn.style.borderColor=t.accent;
   btn.onclick = function() {
     applyThemeColors(t.bg, t.ink, t.accent);
-    document.querySelectorAll(".theme-btn").forEach(function(b){b.classList.remove("active");});
+    clearSchemeSelection();
     btn.classList.add("active");
   };
   document.getElementById("builtinThemes").appendChild(btn);
 });
 
 // ── User schemes via jsonbin.io ───────────────────────────────────────────
+var communitySchemes = [];
+
+function normalizedSchemeName(name) {
+  return String(name || "").trim().toLowerCase();
+}
+
+function schemeNameExists(schemes, name) {
+  var wanted = normalizedSchemeName(name);
+  return schemes.some(function(s) {
+    return normalizedSchemeName(s && s.name) === wanted;
+  });
+}
+
+function builtInSchemeExists(name) {
+  var wanted = normalizedSchemeName(name);
+  return Object.keys(BUILTIN_THEMES).some(function(themeName) {
+    return normalizedSchemeName(themeName) === wanted;
+  });
+}
+
 function schemeBtn(s) {
   var btn = document.createElement("button");
   btn.className = "theme-btn";
@@ -272,7 +300,7 @@ function schemeBtn(s) {
   btn.title = "ID: " + (s.id||"");
   btn.onclick = function() {
     applyThemeColors(s.bg, s.ink, s.accent);
-    document.querySelectorAll(".theme-btn").forEach(function(b){b.classList.remove("active");});
+    clearSchemeSelection();
     btn.classList.add("active");
   };
   return btn;
@@ -281,6 +309,7 @@ function schemeBtn(s) {
 function loadUserSchemes() {
   var div = document.getElementById("userSchemes");
   if (!JSONBIN_BIN || JSONBIN_BIN === "YOUR_MASTER_BIN_ID") {
+    communitySchemes = [];
     div.innerHTML = '<span class="status">Shared schemes not configured yet</span>';
     return;
   }
@@ -289,6 +318,7 @@ function loadUserSchemes() {
   .then(function(r){return r.json();})
   .then(function(data) {
     var schemes = (data.record && data.record.schemes) || [];
+    communitySchemes = schemes;
     div.innerHTML = "";
     if (!schemes.length) {
       div.innerHTML = '<span class="status">No shared schemes yet — be the first!</span>';
@@ -296,8 +326,24 @@ function loadUserSchemes() {
     }
     schemes.forEach(function(s) { div.appendChild(schemeBtn(s)); });
   }).catch(function() {
+    communitySchemes = [];
     div.innerHTML = '<span class="status">Could not load shared schemes</span>';
   });
+}
+
+function fetchCommunitySchemes() {
+  if (!JSONBIN_BIN || JSONBIN_BIN === "YOUR_MASTER_BIN_ID") {
+    return Promise.resolve([]);
+  }
+  return fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN + "/latest")
+    .then(function(r) {
+      if (!r.ok) throw new Error("JSONBin read failed");
+      return r.json();
+    })
+    .then(function(data) {
+      communitySchemes = (data.record && data.record.schemes) || [];
+      return communitySchemes;
+    });
 }
 
 function setStatus(msg, color) {
@@ -309,44 +355,61 @@ function setStatus(msg, color) {
 function saveScheme() {
   var name = document.getElementById("schemeName").value.trim();
   if (!name) { setStatus("Enter a name for your scheme", "#c00"); return; }
+  if (builtInSchemeExists(name)) {
+    setStatus("'"+name+"' is already a built-in theme", "#c00");
+    return;
+  }
   var bg     = document.getElementById("cBg").value;
   var ink    = document.getElementById("cInk").value;
   var accent = document.getElementById("cAccent").value;
   var newScheme = {name:name, bg:bg, ink:ink, accent:accent, id:Date.now().toString(36)};
 
-  // 1. Always save locally
   var local = JSON.parse(localStorage.getItem("sl_local_schemes") || "[]");
-  var localExists = local.find(function(s){ return s.name.toLowerCase()===name.toLowerCase(); });
-  if (localExists) {
+  if (schemeNameExists(local, name)) {
     setStatus("A scheme named '"+name+"' already exists!", "#c00");
     return;
   }
-  local.push(newScheme);
-  localStorage.setItem("sl_local_schemes", JSON.stringify(local));
-  document.getElementById("schemeName").value = "";
-  setStatus("✓ '"+name+"' saved!");
-  renderLocalSchemes();
 
-  // 2. Also share globally if write key available
-  var writeKey = getQueryParam("wk") || "";
+  setStatus("Checking shared schemes...");
+  fetchCommunitySchemes()
+  .then(function(schemes) {
+    if (schemeNameExists(schemes, name)) {
+      setStatus("'"+name+"' is already a community scheme", "#c00");
+      return;
+    }
+
+    // 1. Save locally only after all duplicate checks pass
+    local.push(newScheme);
+    localStorage.setItem("sl_local_schemes", JSON.stringify(local));
+    document.getElementById("schemeName").value = "";
+    setStatus("✓ '"+name+"' saved!");
+    renderLocalSchemes();
+
+    // 2. Also share globally if write key available
+    shareSchemeGlobally(newScheme, schemes);
+  })
+  .catch(function() {
+    setStatus("Could not check community schemes. Try again.", "#c00");
+  });
+}
+
+function shareSchemeGlobally(newScheme, schemes) {
+  var name = newScheme.name;
+  var writeKey = JSONBIN_WRITE_KEY || "";
   if (writeKey && JSONBIN_BIN && JSONBIN_BIN !== "YOUR_MASTER_BIN_ID") {
     setStatus("✓ '"+name+"' saved! Sharing globally...");
-    fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN + "/latest")
-    .then(function(r){return r.json();})
-    .then(function(data) {
-      var schemes = (data.record && data.record.schemes) || [];
-      var exists = schemes.find(function(s){return s.name.toLowerCase()===name.toLowerCase();});
-      if (!exists) {
+    if (!schemeNameExists(schemes, name)) {
         schemes.push(newScheme);
-        return fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN, {
-          method: "PUT",
-          headers: {"Content-Type":"application/json","X-Master-Key":writeKey},
-          body: JSON.stringify({schemes:schemes})
-        });
-      }
-    })
+      return fetch("https://api.jsonbin.io/v3/b/" + JSONBIN_BIN, {
+        method: "PUT",
+        headers: {"Content-Type":"application/json","X-Master-Key":writeKey},
+        body: JSON.stringify({schemes:schemes})
+      })
     .then(function(r){ if(r && r.ok) { setStatus("✓ '"+name+"' saved and shared with everyone!"); loadUserSchemes(); } })
     .catch(function(){ setStatus("✓ '"+name+"' saved locally (global share failed)"); });
+    }
+  } else {
+    setStatus("✓ '"+name+"' saved locally (global share not configured)");
   }
 }
 
@@ -361,7 +424,7 @@ function renderLocalSchemes() {
     return;
   }
   local.forEach(function(s, i) {
-    var btn = makeSchemeBtn(s);
+    var btn = schemeBtn(s);
     // Long-press or right-click to delete
     btn.oncontextmenu = function(e) {
       e.preventDefault();
